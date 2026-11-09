@@ -15,6 +15,7 @@ import {
   createInvoice,
   updateDraftInvoice,
   issueInvoice,
+  fetchInvoiceDetails,
 } from '../../services/api';
 
 interface NewInvoiceModalProps {
@@ -137,6 +138,26 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
               taxRate: it.taxRate || 0,
             }))
           );
+        } else {
+          fetchInvoiceDetails(editingInvoice.id)
+            .then((fullInv) => {
+              if (fullInv && fullInv.items && fullInv.items.length > 0) {
+                setItems(
+                  fullInv.items.map((it) => ({
+                    productId: it.productId || '',
+                    description: it.descriptionSnapshot,
+                    unit: it.unit || 'PCS',
+                    quantity: it.quantity,
+                    unitPrice: it.unitPrice,
+                    discountAmount: it.discountAmount || 0,
+                    taxRate: it.taxRate || 0,
+                  }))
+                );
+              }
+            })
+            .catch((fetchErr) => {
+              console.error('Failed to load full invoice items for draft editing:', fetchErr);
+            });
         }
       } else {
         if (cRes.customers.length > 0 && !customerId) {
@@ -645,6 +666,7 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
                         <td className="py-2 px-2 text-center">
                           <button
                             type="button"
+                            aria-label={`Remove line item ${idx + 1}`}
                             onClick={() => removeItemRow(idx)}
                             disabled={items.length <= 1}
                             className={`p-1 rounded text-slate-400 hover:text-red-600 transition-colors ${

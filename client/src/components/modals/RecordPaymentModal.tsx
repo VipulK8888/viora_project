@@ -241,6 +241,7 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
           <div className="pt-2 border-t border-slate-100">
             <label className="flex items-start gap-2.5 cursor-pointer">
               <input
+                id="payment-confirm-checkbox"
                 type="checkbox"
                 checked={confirmed}
                 onChange={(e) => setConfirmed(e.target.checked)}

@@ -690,7 +690,9 @@ export const RemindersView: React.FC = () => {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsTestModalOpen(false)}
+                aria-label="Close test simulator"
                 className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200/50 transition-colors"
               >
                 <X className="w-4 h-4" />

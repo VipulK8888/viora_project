@@ -17,6 +17,7 @@ interface InvoicesViewProps {
   onRecordPayment: (inv: Invoice) => void;
   onEditDraft?: (inv: Invoice) => void;
   onInvoiceDataChanged?: () => void;
+  refreshTrigger?: number;
 }
 
 export const InvoicesView: React.FC<InvoicesViewProps> = ({
@@ -26,6 +27,7 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({
   onRecordPayment,
   onEditDraft,
   onInvoiceDataChanged,
+  refreshTrigger,
 }) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -102,7 +104,7 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({
 
   useEffect(() => {
     loadInvoices();
-  }, [loadInvoices]);
+  }, [loadInvoices, refreshTrigger]);
 
   const handleDeleteDraft = async (inv: Invoice) => {
     if (!window.confirm(`Are you sure you want to delete draft invoice ${inv.invoiceNumber}? This action cannot be undone.`)) {

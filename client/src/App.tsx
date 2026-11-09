@@ -136,8 +136,10 @@ export const App: React.FC = () => {
   const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null);
   const [systemHealth] = useState<SystemHealth>({ status: 'healthy' });
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [dataVersion, setDataVersion] = useState(0);
 
   const loadData = useCallback(async () => {
+    setDataVersion((v) => v + 1);
     try {
       const [invData, summary] = await Promise.all([
         fetchInvoices({ limit: 10 }),
@@ -236,6 +238,7 @@ export const App: React.FC = () => {
               onRecordPayment={(inv) => setPaymentInvoice(inv)}
               onEditDraft={handleEditDraft}
               onInvoiceDataChanged={loadData}
+              refreshTrigger={dataVersion}
             />
           )}
 
