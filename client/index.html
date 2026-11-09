@@ -3,13 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/jpeg" href="/brand-logo.jpg" />
+    <link rel="apple-touch-icon" href="/brand-logo.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0B0C0E" />
     <meta name="description" content="billv — Smart billing and automated payment reminders for modern businesses." />
+    
+    <!-- Open Graph & Social Cards -->
+    <meta property="og:title" content="billv — Professional Billing & Automated Reminders" />
+    <meta property="og:description" content="billv — Smart billing and automated payment reminders for modern businesses." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/brand-logo.jpg" />
+    <meta name="twitter:card" content="summary" />
+    
+    <link rel="canonical" href="http://localhost:5173/" />
+    <link rel="manifest" href="/manifest.json" />
+    
     <title>billv — Professional Billing & Automated Reminders</title>
-    <!-- Google Fonts: Inter -->
+    
+    <!-- Google Fonts: Inter (Non-blocking async load for maximum Lighthouse performance) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    </noscript>
   </head>
   <body class="h-full font-sans text-slate-800 antialiased selection:bg-amber-200 selection:text-slate-900">
     <div id="root" class="h-full"></div>

@@ -75,6 +75,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <img
                 src="/brand-logo.png"
                 alt="billv emblem"
+                width="40"
+                height="40"
+                loading="eager"
                 className="w-full h-full object-contain"
               />
             </div>
@@ -85,6 +88,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <img
                   src="/billv-name.jpg"
                   alt="billv"
+                  width="130"
+                  height="32"
+                  loading="eager"
                   className="h-8 w-auto max-w-[130px] object-contain brightness-105"
                 />
               </div>
@@ -122,6 +128,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             return (
               <button
                 key={item.key}
+                type="button"
+                aria-label={item.label}
                 onClick={() => {
                   onNavigate(item.key);
                   onCloseMobile();

@@ -101,6 +101,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <input
                 type="date"
                 value={customStart}
+                aria-label="Filter start date"
                 onChange={(e) => setCustomStart(e.target.value)}
                 className="px-2 py-0.5 bg-white border border-slate-200 rounded-md text-slate-700 text-xs"
               />
@@ -108,6 +109,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <input
                 type="date"
                 value={customEnd}
+                aria-label="Filter end date"
                 onChange={(e) => setCustomEnd(e.target.value)}
                 className="px-2 py-0.5 bg-white border border-slate-200 rounded-md text-slate-700 text-xs"
               />
@@ -157,7 +159,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </section>
 
       {/* Quick Link Entity Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <section aria-label="Quick Navigation Links" className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Customer Directory */}
         <button
           type="button"

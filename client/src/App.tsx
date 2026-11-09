@@ -1,16 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { AppLayout } from './components/layout/AppLayout';
 import { DashboardView } from './components/pages/DashboardView';
-import { InvoicesView } from './components/pages/InvoicesView';
-import { CustomersView } from './components/pages/CustomersView';
-import { ProductsView } from './components/pages/ProductsView';
-import { PaymentsView } from './components/pages/PaymentsView';
-import { ReportsView } from './components/pages/ReportsView';
-import { SettingsView } from './components/pages/SettingsView';
-import { RemindersView } from './components/pages/RemindersView';
-import { NewInvoiceModal } from './components/modals/NewInvoiceModal';
-import { RecordPaymentModal } from './components/modals/RecordPaymentModal';
-import { InvoicePreviewModal } from './components/modals/InvoicePreviewModal';
+
+// Code-split secondary views & modals for optimal initial page-load performance
+const InvoicesView = lazy(() => import('./components/pages/InvoicesView').then(m => ({ default: m.InvoicesView })));
+const CustomersView = lazy(() => import('./components/pages/CustomersView').then(m => ({ default: m.CustomersView })));
+const ProductsView = lazy(() => import('./components/pages/ProductsView').then(m => ({ default: m.ProductsView })));
+const PaymentsView = lazy(() => import('./components/pages/PaymentsView').then(m => ({ default: m.PaymentsView })));
+const ReportsView = lazy(() => import('./components/pages/ReportsView').then(m => ({ default: m.ReportsView })));
+const SettingsView = lazy(() => import('./components/pages/SettingsView').then(m => ({ default: m.SettingsView })));
+const RemindersView = lazy(() => import('./components/pages/RemindersView').then(m => ({ default: m.RemindersView })));
+const NewInvoiceModal = lazy(() => import('./components/modals/NewInvoiceModal').then(m => ({ default: m.NewInvoiceModal })));
+const RecordPaymentModal = lazy(() => import('./components/modals/RecordPaymentModal').then(m => ({ default: m.RecordPaymentModal })));
+const InvoicePreviewModal = lazy(() => import('./components/modals/InvoicePreviewModal').then(m => ({ default: m.InvoicePreviewModal })));
 import {
   NavigationKey,
   Invoice,
@@ -111,102 +113,112 @@ export const App: React.FC = () => {
         onNavigate={setCurrentNav}
         systemHealth={systemHealth}
       >
-        {currentNav === 'dashboard' && (
-          <DashboardView
-            summary={dashboardSummary}
-            invoices={invoices}
-            onSelectInvoice={(inv) => setPreviewInvoiceId(inv.id)}
-            onNewInvoice={handleOpenNewInvoice}
-            isSimulatedEmpty={isSimulatedEmpty}
-            onSimulateEmptyToggle={setIsSimulatedEmpty}
-            onNavigateToCustomers={() => setCurrentNav('customers')}
-            onNavigateToProducts={() => setCurrentNav('products')}
-            onNavigateToReminders={() => setCurrentNav('reminders')}
-            onDateRangeChange={handleDashboardDateRangeChange}
-          />
-        )}
+        <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500">Loading module...</div>}>
+          {currentNav === 'dashboard' && (
+            <DashboardView
+              summary={dashboardSummary}
+              invoices={invoices}
+              onSelectInvoice={(inv) => setPreviewInvoiceId(inv.id)}
+              onNewInvoice={handleOpenNewInvoice}
+              isSimulatedEmpty={isSimulatedEmpty}
+              onSimulateEmptyToggle={setIsSimulatedEmpty}
+              onNavigateToCustomers={() => setCurrentNav('customers')}
+              onNavigateToProducts={() => setCurrentNav('products')}
+              onNavigateToReminders={() => setCurrentNav('reminders')}
+              onDateRangeChange={handleDashboardDateRangeChange}
+            />
+          )}
 
-        {currentNav === 'invoices' && (
-          <InvoicesView
-            onSelectInvoice={(inv) => setPreviewInvoiceId(inv.id)}
-            onNewInvoice={handleOpenNewInvoice}
-            onIssueInvoice={handleIssueInvoice}
-            onRecordPayment={(inv) => setPaymentInvoice(inv)}
-            onEditDraft={handleEditDraft}
-            onInvoiceDataChanged={loadData}
-          />
-        )}
+          {currentNav === 'invoices' && (
+            <InvoicesView
+              onSelectInvoice={(inv) => setPreviewInvoiceId(inv.id)}
+              onNewInvoice={handleOpenNewInvoice}
+              onIssueInvoice={handleIssueInvoice}
+              onRecordPayment={(inv) => setPaymentInvoice(inv)}
+              onEditDraft={handleEditDraft}
+              onInvoiceDataChanged={loadData}
+            />
+          )}
 
-        {currentNav === 'reminders' && <RemindersView />}
+          {currentNav === 'reminders' && <RemindersView />}
 
-        {currentNav === 'customers' && <CustomersView />}
+          {currentNav === 'customers' && <CustomersView />}
 
-        {currentNav === 'products' && <ProductsView />}
+          {currentNav === 'products' && <ProductsView />}
 
-        {currentNav === 'payments' && (
-          <PaymentsView
-            onSelectInvoice={(invId) => setPreviewInvoiceId(invId)}
-            onOpenRecordPayment={() => {
-              const payable = invoices.find(
-                (inv) => inv.status === 'ISSUED' && (inv.balanceRemaining === undefined || inv.balanceRemaining > 0)
-              );
-              if (payable) {
-                setPaymentInvoice(payable);
+          {currentNav === 'payments' && (
+            <PaymentsView
+              onSelectInvoice={(invId) => setPreviewInvoiceId(invId)}
+              onOpenRecordPayment={() => {
+                const payable = invoices.find(
+                  (inv) => inv.status === 'ISSUED' && (inv.balanceRemaining === undefined || inv.balanceRemaining > 0)
+                );
+                if (payable) {
+                  setPaymentInvoice(payable);
+                } else {
+                  alert('No outstanding issued invoices available for payment. Please issue an invoice first.');
+                }
+              }}
+            />
+          )}
+
+          {currentNav === 'reports' && <ReportsView />}
+
+          {currentNav === 'settings' && <SettingsView />}
+        </Suspense>
+      </AppLayout>
+
+      {/* New / Edit Invoice Modal */}
+      <Suspense fallback={null}>
+        {isNewInvoiceOpen && (
+          <NewInvoiceModal
+            isOpen={isNewInvoiceOpen}
+            editingInvoice={editingInvoice}
+            onClose={() => {
+              setIsNewInvoiceOpen(false);
+              setEditingInvoice(null);
+            }}
+            onSuccess={(saved) => {
+              loadData();
+              if (saved?.status === 'ISSUED') {
+                setActionNotice(`Invoice ${saved.invoiceNumber} issued officially!`);
               } else {
-                alert('No outstanding issued invoices available for payment. Please issue an invoice first.');
+                setActionNotice('Draft invoice saved to PostgreSQL registry');
               }
+              setTimeout(() => setActionNotice(null), 3000);
             }}
           />
         )}
 
-        {currentNav === 'reports' && <ReportsView />}
+        {/* Record Payment Modal */}
+        {paymentInvoice && (
+          <RecordPaymentModal
+            invoice={paymentInvoice}
+            isOpen={Boolean(paymentInvoice)}
+            onClose={() => setPaymentInvoice(null)}
+            onSuccess={() => {
+              loadData();
+              setActionNotice('Payment recorded and applied to invoice balance');
+              setTimeout(() => setActionNotice(null), 3000);
+            }}
+          />
+        )}
 
-        {currentNav === 'settings' && <SettingsView />}
-      </AppLayout>
-
-      {/* New / Edit Invoice Modal */}
-      <NewInvoiceModal
-        isOpen={isNewInvoiceOpen}
-        editingInvoice={editingInvoice}
-        onClose={() => {
-          setIsNewInvoiceOpen(false);
-          setEditingInvoice(null);
-        }}
-        onSuccess={(saved) => {
-          loadData();
-          if (saved?.status === 'ISSUED') {
-            setActionNotice(`Invoice ${saved.invoiceNumber} issued officially!`);
-          } else {
-            setActionNotice('Draft invoice saved to PostgreSQL registry');
-          }
-          setTimeout(() => setActionNotice(null), 3000);
-        }}
-      />
-
-      {/* Record Payment Modal */}
-      <RecordPaymentModal
-        invoice={paymentInvoice}
-        isOpen={Boolean(paymentInvoice)}
-        onClose={() => setPaymentInvoice(null)}
-        onSuccess={() => {
-          loadData();
-          setActionNotice('Payment recorded and applied to invoice balance');
-          setTimeout(() => setActionNotice(null), 3000);
-        }}
-      />
-
-      {/* Professional Invoice Preview & Print Modal */}
-      <InvoicePreviewModal
-        invoiceId={previewInvoiceId}
-        isOpen={Boolean(previewInvoiceId)}
-        onClose={() => setPreviewInvoiceId(null)}
-        onIssueSuccess={() => {
-          loadData();
-        }}
-        onOpenPayment={(inv) => {
-          setPaymentInvoice(inv);
-        }}
-      />
+        {/* Professional Invoice Preview & Print Modal */}
+        {previewInvoiceId && (
+          <InvoicePreviewModal
+            invoiceId={previewInvoiceId}
+            isOpen={Boolean(previewInvoiceId)}
+            onClose={() => setPreviewInvoiceId(null)}
+            onIssueSuccess={() => {
+              loadData();
+            }}
+            onOpenPayment={(inv) => {
+              setPaymentInvoice(inv);
+            }}
+          />
+        )}
+      </Suspense>
     </>
   );
 };

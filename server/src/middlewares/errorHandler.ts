@@ -43,7 +43,9 @@ export function errorHandler(
   const details = isAppError ? (err as AppError).details : undefined;
 
   if (env.NODE_ENV !== 'test') {
-    console.error(`[Error] ${req.method} ${req.url}:`, err);
+    const cleanMethod = encodeURIComponent(String(req.method || '')).replace(/[\r\n]/g, '');
+    const cleanUrl = encodeURI(String(req.originalUrl || req.url || '')).replace(/[\r\n]/g, '');
+    console.error(`[Error] ${cleanMethod} ${cleanUrl}:`, err);
   }
 
   return sendError(res, message, statusCode, code, details);

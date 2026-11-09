@@ -220,6 +220,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             <input
               type="text"
               value={activeSearch}
+              aria-label="Search by invoice number or customer name"
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search by Invoice number or customer name..."
               className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
@@ -232,6 +233,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               <User className="w-3.5 h-3.5 text-slate-400" />
               <select
                 value={activeCustomer}
+                aria-label="Filter by customer"
                 onChange={(e) => handleCustomerSelect(e.target.value)}
                 className="py-1 px-2.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
               >
@@ -251,6 +253,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             <input
               type="date"
               value={activeStart}
+              aria-label="Filter invoices from date"
               onChange={(e) => handleDateChange(e.target.value, activeEnd)}
               className="py-1 px-2 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
               title="From date"
@@ -259,6 +262,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             <input
               type="date"
               value={activeEnd}
+              aria-label="Filter invoices to date"
               onChange={(e) => handleDateChange(activeStart, e.target.value)}
               className="py-1 px-2 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
               title="To date"

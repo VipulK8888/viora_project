@@ -311,7 +311,8 @@ export async function getTransporter(business?: {
     transporter: nodemailer.createTransport({
       streamTransport: true,
       newline: 'windows',
-    }),
+      secure: true,
+    } as Parameters<typeof nodemailer.createTransport>[0]),
   };
 }
 
