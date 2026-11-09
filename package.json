@@ -1,0 +1,40 @@
+{
+  "name": "viora-bills",
+  "version": "0.1.0",
+  "description": "Professional web-based invoice and business billing application",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -p \"[{name}]\" -n \"CLIENT,SERVER\" -c \"teal.bold,blue.bold\" \"npm run dev --workspace=client\" \"npm run dev --workspace=server\"",
+    "dev:client": "npm run dev --workspace=client",
+    "dev:server": "npm run dev --workspace=server",
+    "build": "npm run build --workspace=server && npm run build --workspace=client",
+    "build:client": "npm run build --workspace=client",
+    "build:server": "npm run build --workspace=server",
+    "type-check": "npm run type-check --workspace=server && npm run type-check --workspace=client",
+    "lint": "npm run lint --workspace=server && npm run lint --workspace=client",
+    "test:backend": "npm run test:backend --workspace=server",
+    "prisma:generate": "npm run prisma:generate --workspace=server",
+    "prisma:migrate": "npm run prisma:migrate --workspace=server",
+    "prisma:seed": "npm run prisma:seed --workspace=server",
+    "prisma:push": "npm run prisma:push --workspace=server",
+    "start": "npm run start --workspace=server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "billing",
+    "invoicing",
+    "gst",
+    "react",
+    "express",
+    "typescript",
+    "prisma"
+  ],
+  "author": "Viora Tech Internship Team",
+  "license": "ISC"
+}

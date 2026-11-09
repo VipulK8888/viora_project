@@ -1,0 +1,237 @@
+// Prisma schema for Viora Bills
+// Phase 2: PostgreSQL Database & Business Invoicing Models
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  UPI
+  CHEQUE
+  CARD
+  OTHER
+}
+
+enum ReminderChannel {
+  EMAIL
+  WHATSAPP
+  BOTH
+}
+
+enum ReminderStatus {
+  SENT
+  FAILED
+  SKIPPED
+}
+
+model Business {
+  id                  String        @id @default(uuid())
+  name                String
+  logoUrl             String?
+  address             String
+  phone               String
+  email               String
+  gstin               String?
+  state               String?       @default("Karnataka")
+  invoicePrefix       String        @default("INV")
+  nextInvoiceNumber   Int           @default(1)
+  highTierMinAmount   Decimal       @default(50000.00) @db.Decimal(12, 2)
+  highTierDaysGap     Int           @default(3)
+  midTierMinAmount    Decimal       @default(10000.00) @db.Decimal(12, 2)
+  midTierDaysGap      Int           @default(5)
+  lowTierDaysGap      Int           @default(10)
+  autoReminderEnabled Boolean       @default(true)
+  smtpHost            String?       @default("smtp.gmail.com")
+  smtpPort            Int?          @default(587)
+  smtpUser            String?
+  smtpPass            String?
+  smtpSecure          Boolean?      @default(false)
+  smtpFrom            String?
+  customers           Customer[]
+  products            Product[]
+  invoices            Invoice[]
+  reminderLogs        ReminderLog[]
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@map("businesses")
+}
+
+model Customer {
+  id             String        @id @default(uuid())
+  businessId     String
+  business       Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name           String
+  phone          String
+  email          String?
+  billingAddress String
+  gstin          String?
+  state          String?       @default("Karnataka")
+  isArchived     Boolean       @default(false)
+  invoices       Invoice[]
+  reminderLogs   ReminderLog[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([businessId])
+  @@index([isArchived])
+  @@map("customers")
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  businessId  String
+  business    Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  unit        String        @default("PCS")
+  unitPrice   Decimal       @db.Decimal(12, 2)
+  taxRate     Decimal       @default(0.00) @db.Decimal(5, 2)
+  isActive    Boolean       @default(true)
+  isArchived  Boolean       @default(false)
+  items       InvoiceItem[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([businessId])
+  @@index([isActive])
+  @@index([isArchived])
+  @@map("products")
+}
+
+model Invoice {
+  id             String        @id @default(uuid())
+  businessId     String
+  business       Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerId     String
+  customer       Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  invoiceNumber  String
+  invoiceDate    DateTime
+  dueDate        DateTime
+  status         InvoiceStatus @default(DRAFT)
+  placeOfSupply  String?       @default("Karnataka")
+  isInterState   Boolean       @default(false)
+  subtotal       Decimal       @db.Decimal(12, 2)
+  discountTotal  Decimal       @default(0.00) @db.Decimal(12, 2)
+  taxableAmount  Decimal       @default(0.00) @db.Decimal(12, 2)
+  cgstTotal      Decimal       @default(0.00) @db.Decimal(12, 2)
+  sgstTotal      Decimal       @default(0.00) @db.Decimal(12, 2)
+  igstTotal      Decimal       @default(0.00) @db.Decimal(12, 2)
+  taxTotal       Decimal       @default(0.00) @db.Decimal(12, 2)
+  grandTotal     Decimal       @db.Decimal(12, 2)
+  notes          String?
+
+  // Snapshots preserved upon issuance
+  customerNameSnapshot    String?
+  customerPhoneSnapshot   String?
+  customerEmailSnapshot   String?
+  customerAddressSnapshot String?
+  customerGstinSnapshot   String?
+  customerStateSnapshot   String?
+  businessNameSnapshot    String?
+  businessAddressSnapshot String?
+  businessPhoneSnapshot   String?
+  businessEmailSnapshot   String?
+  businessGstinSnapshot   String?
+  businessStateSnapshot   String?
+
+  lastReminderSentAt DateTime?
+  reminderCount      Int           @default(0)
+
+  items        InvoiceItem[]
+  payments     Payment[]
+  reminderLogs ReminderLog[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([businessId, invoiceNumber])
+  @@index([businessId, status])
+  @@index([customerId])
+  @@index([invoiceDate])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id                  String   @id @default(uuid())
+  invoiceId           String
+  invoice             Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId           String?
+  product             Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  descriptionSnapshot String
+  unit                String   @default("PCS")
+  unitSnapshot        String?
+  quantity            Decimal  @db.Decimal(12, 4)
+  unitPrice           Decimal  @db.Decimal(12, 2)
+  discountAmount      Decimal  @default(0.00) @db.Decimal(12, 2)
+  taxRate             Decimal  @default(0.00) @db.Decimal(5, 2)
+  taxableAmount       Decimal  @db.Decimal(12, 2)
+  cgstRate            Decimal  @default(0.00) @db.Decimal(5, 2)
+  cgstAmount          Decimal  @default(0.00) @db.Decimal(12, 2)
+  sgstRate            Decimal  @default(0.00) @db.Decimal(5, 2)
+  sgstAmount          Decimal  @default(0.00) @db.Decimal(12, 2)
+  igstRate            Decimal  @default(0.00) @db.Decimal(5, 2)
+  igstAmount          Decimal  @default(0.00) @db.Decimal(12, 2)
+  taxAmount           Decimal  @default(0.00) @db.Decimal(12, 2)
+  lineTotal           Decimal  @db.Decimal(12, 2)
+
+  @@index([invoiceId])
+  @@index([productId])
+  @@map("invoice_items")
+}
+
+model Payment {
+  id          String        @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  amount      Decimal       @db.Decimal(12, 2)
+  paymentDate DateTime      @default(now())
+  method      PaymentMethod @default(BANK_TRANSFER)
+  reference   String?
+  requestKey  String        @unique
+  createdAt   DateTime      @default(now())
+
+  @@index([invoiceId])
+  @@index([paymentDate])
+  @@map("payments")
+}
+
+model ReminderLog {
+  id             String          @id @default(uuid())
+  businessId     String
+  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  invoiceId      String
+  invoice        Invoice         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  customerId     String?
+  customer       Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  channel        ReminderChannel
+  recipient      String
+  amountPending  Decimal         @db.Decimal(12, 2)
+  tier           String
+  daysGapApplied Int
+  status         ReminderStatus  @default(SENT)
+  subject        String?
+  messageContent String          @db.Text
+  externalId     String?
+  previewUrl     String?
+  sentAt         DateTime        @default(now())
+  nextEligibleAt DateTime
+
+  @@index([invoiceId])
+  @@index([businessId])
+  @@index([sentAt])
+  @@map("reminder_logs")
+}
