@@ -57,12 +57,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   const handleApplyCustomDates = () => {
-    if (customStart || customEnd) {
-      onDateRangeChange?.(customStart || undefined, customEnd || undefined);
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const safeStart = dateRegex.test(customStart.trim()) ? customStart.trim() : undefined;
+    const safeEnd = dateRegex.test(customEnd.trim()) ? customEnd.trim() : undefined;
+    if (safeStart || safeEnd) {
+      onDateRangeChange?.(safeStart, safeEnd);
     }
   };
 
-  const hasNoInvoices = invoices.length === 0;
+  const hasNoInvoices = summary !== null && invoices.length === 0;
 
   return (
     <div className="space-y-6">
@@ -172,12 +175,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div>
               <div className="text-xs font-bold text-slate-900">Active Customer Directory</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
+              <div className="text-[11px] text-slate-600 mt-0.5">
                 {summary?.counts.customers ?? 0} registered client accounts
               </div>
             </div>
           </div>
-          <span className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1">
+          <span className="text-xs font-semibold text-amber-800 hover:text-amber-900 flex items-center gap-1">
             Manage →
           </span>
         </button>
@@ -194,12 +197,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div>
               <div className="text-xs font-bold text-slate-900">Products & Services Catalog</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
+              <div className="text-[11px] text-slate-600 mt-0.5">
                 {summary?.counts.products ?? 0} billing catalog items
               </div>
             </div>
           </div>
-          <span className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1">
+          <span className="text-xs font-semibold text-amber-800 hover:text-amber-900 flex items-center gap-1">
             Manage →
           </span>
         </button>
@@ -216,12 +219,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div>
               <div className="text-xs font-bold text-slate-900">Automated Reminders</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
+              <div className="text-[11px] text-slate-600 mt-0.5">
                 WhatsApp & Email Cadence
               </div>
             </div>
           </div>
-          <span className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1">
+          <span className="text-xs font-semibold text-amber-800 hover:text-amber-900 flex items-center gap-1">
             Open →
           </span>
         </button>

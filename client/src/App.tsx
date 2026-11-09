@@ -81,7 +81,10 @@ export const App: React.FC = () => {
 
   const handleDashboardDateRangeChange = async (startDate?: string, endDate?: string) => {
     try {
-      const summary = await fetchDashboardSummary({ startDate, endDate });
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      const safeStart = startDate && dateRegex.test(startDate.trim()) ? startDate.trim() : undefined;
+      const safeEnd = endDate && dateRegex.test(endDate.trim()) ? endDate.trim() : undefined;
+      const summary = await fetchDashboardSummary({ startDate: safeStart, endDate: safeEnd });
       setDashboardSummary(summary);
     } catch (err) {
       console.error('Failed to filter dashboard summary:', err);

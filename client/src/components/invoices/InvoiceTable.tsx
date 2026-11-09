@@ -193,7 +193,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             </span>
             {isLoading && <Loader2 className="w-3.5 h-3.5 text-amber-600 animate-spin" />}
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-600 mt-0.5">
             Manage drafts, issued invoices, tax breakdowns, and payment statuses
           </p>
         </div>
@@ -258,7 +258,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               className="py-1 px-2 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
               title="From date"
             />
-            <span className="text-slate-400">to</span>
+            <span className="text-slate-600">to</span>
             <input
               type="date"
               value={activeEnd}
@@ -281,7 +281,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
         {/* Status Pill Filters */}
         <div className="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 pt-1">
-          <span className="text-xs text-slate-400 flex items-center gap-1 mr-1.5">
+          <span className="text-xs text-slate-600 flex items-center gap-1 mr-1.5">
             <Filter className="w-3 h-3" />
             Status:
           </span>
@@ -382,7 +382,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                   <td className="py-3.5 px-4">
                     <div className="font-semibold text-slate-900">{inv.customerName || 'Customer'}</div>
                     {inv.customerEmail && (
-                      <div className="text-[11px] text-slate-400 truncate max-w-[180px]">
+                      <div className="text-[11px] text-slate-600 truncate max-w-[180px]">
                         {inv.customerEmail}
                       </div>
                     )}

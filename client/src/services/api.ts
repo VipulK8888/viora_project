@@ -33,6 +33,16 @@ export async function fetchHealth(): Promise<SystemHealth> {
   }
 }
 
+// Helper to strictly sanitize date parameters (YYYY-MM-DD) to prevent Client-Side Request Forgery (S8476)
+function sanitizeDateParam(value?: string | null): string | undefined {
+  if (!value) return undefined;
+  const trimmed = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return encodeURIComponent(trimmed);
+  }
+  return undefined;
+}
+
 // -------------------------------------------------------------
 // Dashboard & Reports API
 // -------------------------------------------------------------
@@ -42,8 +52,11 @@ export async function fetchDashboardSummary(params?: {
 }): Promise<DashboardSummary | null> {
   try {
     const query = new URLSearchParams();
-    if (params?.startDate) query.append('startDate', params.startDate);
-    if (params?.endDate) query.append('endDate', params.endDate);
+    const safeStart = sanitizeDateParam(params?.startDate);
+    const safeEnd = sanitizeDateParam(params?.endDate);
+
+    if (safeStart) query.append('startDate', safeStart);
+    if (safeEnd) query.append('endDate', safeEnd);
 
     const queryString = query.toString();
     const url = queryString ? `${API_BASE}/dashboard/summary?${queryString}` : `${API_BASE}/dashboard/summary`;
@@ -63,11 +76,17 @@ export async function fetchSalesReport(params?: {
   groupBy?: 'day' | 'month';
 }): Promise<SalesReportData> {
   const query = new URLSearchParams();
-  if (params?.startDate) query.append('startDate', params.startDate);
-  if (params?.endDate) query.append('endDate', params.endDate);
-  if (params?.groupBy) query.append('groupBy', params.groupBy);
+  const safeStart = sanitizeDateParam(params?.startDate);
+  const safeEnd = sanitizeDateParam(params?.endDate);
+  if (safeStart) query.append('startDate', safeStart);
+  if (safeEnd) query.append('endDate', safeEnd);
+  if (params?.groupBy === 'day' || params?.groupBy === 'month') {
+    query.append('groupBy', encodeURIComponent(params.groupBy));
+  }
 
-  const res = await fetch(`${API_BASE}/reports/sales?${query.toString()}`);
+  const queryString = query.toString();
+  const url = queryString ? `${API_BASE}/reports/sales?${queryString}` : `${API_BASE}/reports/sales`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error('Failed to load sales report');
   const json = await res.json();
   return json.data;

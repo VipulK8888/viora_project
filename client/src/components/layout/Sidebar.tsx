@@ -73,11 +73,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {/* Logo Badge (Clean squircle cat emblem - no outer white border) */}
             <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105">
               <img
-                src="/brand-logo.png"
+                src="/brand-logo.jpg"
                 alt="billv emblem"
                 width="40"
                 height="40"
                 loading="eager"
+                decoding="async"
                 className="w-full h-full object-contain"
               />
             </div>
@@ -91,6 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   width="130"
                   height="32"
                   loading="eager"
+                  decoding="async"
                   className="h-8 w-auto max-w-[130px] object-contain brightness-105"
                 />
               </div>

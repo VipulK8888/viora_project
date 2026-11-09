@@ -15,14 +15,14 @@ export const StatCard: React.FC<StatCardProps> = ({
   customIcon,
 }) => {
   return (
-    <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-xs flex items-center justify-between">
+    <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-xs flex items-center justify-between min-h-[92px]">
       <div>
         <p className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
           {title}
         </p>
-        <h3 className="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight">
+        <div className="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight">
           {value}
-        </h3>
+        </div>
       </div>
       <div className="w-9 h-9 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100/70 shadow-xs flex-shrink-0">
         {customIcon ? (
