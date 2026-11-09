@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { prisma } from '../../config/prisma';
+import { prisma, Prisma } from '../../config/prisma';
 import { sendSuccess } from '../../utils/response';
 import { validateRequest } from '../../middlewares/validate';
 import { AppError } from '../../middlewares/errorHandler';
@@ -65,9 +65,14 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const business = await getOrCreateDefaultBusiness();
-      const { search, page, limit, includeArchived } = req.query as any;
+      const { search, page, limit, includeArchived } = req.query as unknown as {
+        search?: string;
+        page: number;
+        limit: number;
+        includeArchived?: string;
+      };
 
-      const where: any = {
+      const where: Prisma.CustomerWhereInput = {
         businessId: business.id,
       };
 

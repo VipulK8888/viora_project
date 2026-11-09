@@ -1,0 +1,15 @@
+{
+  "engines": {
+    "eslint": {
+      "enabled": true
+    }
+  },
+  "exclude": [
+    "server/src/generated/**",
+    "**/generated/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/node_modules/**"
+  ]
+}
+

@@ -187,7 +187,7 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
     setItems(next);
   };
 
-  const updateItemField = (index: number, field: keyof ItemRow, value: any) => {
+  const updateItemField = <K extends keyof ItemRow>(index: number, field: K, value: ItemRow[K]) => {
     const next = [...items];
     next[index] = { ...next[index], [field]: value };
     setItems(next);
@@ -342,8 +342,9 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
       }
 
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to save invoice');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to save invoice';
+      setError(msg);
     } finally {
       setIsSubmitting(false);
       setIsIssueImmediate(false);
@@ -391,11 +392,12 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50/70 rounded-xl border border-slate-200/70 text-xs">
             {/* Customer Picker */}
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-700 flex items-center gap-1.5">
+              <label htmlFor="select-customer-input" className="font-semibold text-slate-700 flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-teal-600" />
                 Select Customer *
               </label>
               <select
+                id="select-customer-input"
                 value={customerId}
                 onChange={(e) => handleCustomerChange(e.target.value)}
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
@@ -423,8 +425,9 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
             {/* Dates & Reference */}
             <div className="space-y-3">
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Invoice Date *</label>
+                <label htmlFor="invoice-date-input" className="font-semibold text-slate-700 block mb-1">Invoice Date *</label>
                 <input
+                  id="invoice-date-input"
                   type="date"
                   value={invoiceDate}
                   onChange={(e) => setInvoiceDate(e.target.value)}
@@ -433,8 +436,9 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Due Date *</label>
+                <label htmlFor="due-date-input" className="font-semibold text-slate-700 block mb-1">Due Date *</label>
                 <input
+                  id="due-date-input"
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
@@ -446,8 +450,9 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
             {/* Place of Supply & GST Split Mode */}
             <div className="space-y-3">
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Place of Supply (State)</label>
+                <label htmlFor="place-of-supply-select" className="font-semibold text-slate-700 block mb-1">Place of Supply (State)</label>
                 <select
+                  id="place-of-supply-select"
                   value={placeOfSupply}
                   onChange={(e) => {
                     const st = e.target.value;
@@ -465,7 +470,7 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 block mb-1">Supply Tax Treatment</label>
+                <span className="font-semibold text-slate-700 block mb-1">Supply Tax Treatment</span>
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     type="button"
@@ -581,7 +586,7 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
                             min="0.01"
                             step="any"
                             value={row.quantity || ''}
-                            onChange={(e) => updateItemField(idx, 'quantity', parseFloat(e.target.value) || 0)}
+                            onChange={(e) => updateItemField(idx, 'quantity', Number.parseFloat(e.target.value) || 0)}
                             className="w-full p-1.5 bg-white border border-slate-200 rounded text-xs text-right font-mono"
                           />
                         </td>
@@ -593,7 +598,7 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
                             min="0"
                             step="any"
                             value={row.unitPrice || ''}
-                            onChange={(e) => updateItemField(idx, 'unitPrice', parseFloat(e.target.value) || 0)}
+                            onChange={(e) => updateItemField(idx, 'unitPrice', Number.parseFloat(e.target.value) || 0)}
                             className="w-full p-1.5 bg-white border border-slate-200 rounded text-xs text-right font-mono font-medium"
                           />
                         </td>
@@ -605,7 +610,7 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
                             min="0"
                             step="any"
                             value={row.discountAmount || ''}
-                            onChange={(e) => updateItemField(idx, 'discountAmount', parseFloat(e.target.value) || 0)}
+                            onChange={(e) => updateItemField(idx, 'discountAmount', Number.parseFloat(e.target.value) || 0)}
                             placeholder="0"
                             className="w-full p-1.5 bg-white border border-slate-200 rounded text-xs text-right font-mono text-emerald-700"
                           />
@@ -615,7 +620,7 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
                         <td className="py-2 px-1">
                           <select
                             value={row.taxRate}
-                            onChange={(e) => updateItemField(idx, 'taxRate', parseFloat(e.target.value) || 0)}
+                            onChange={(e) => updateItemField(idx, 'taxRate', Number.parseFloat(e.target.value) || 0)}
                             className="w-full p-1.5 bg-white border border-slate-200 rounded text-xs text-right font-mono font-medium"
                           >
                             {GST_RATES.map((r) => (
@@ -661,8 +666,9 @@ export const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
             {/* Notes */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 block">Notes & Terms of Payment</label>
+              <label htmlFor="invoice-notes-textarea" className="text-xs font-semibold text-slate-700 block">Notes & Terms of Payment</label>
               <textarea
+                id="invoice-notes-textarea"
                 rows={4}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}

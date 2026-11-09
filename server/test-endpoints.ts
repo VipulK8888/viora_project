@@ -2,33 +2,22 @@ import { createApp } from './src/app';
 import { prisma } from './src/config/prisma';
 import http from 'http';
 import { calculateLineItem, calculateInvoiceTotals } from './src/utils/money';
+import { generateInvoicePdfStream } from './src/services/pdf.service';
 
-async function runTests() {
+async function testPhase3(BASE: string, businessId: string) {
   console.log('🧪 Starting Phase 3 Comprehensive Verification & Test Suite...\n');
 
-  const app = createApp();
-  const server = http.createServer(app);
+  // Clean up any unreferenced test customers from prior runs for idempotency
+  await prisma.customer.deleteMany({
+    where: {
+      businessId,
+      email: { in: ['billing@enterpriseclient.in', 'qa.test@vioratech.com'] },
+      invoices: { none: {} },
+    },
+  });
 
-  await new Promise<void>((resolve) => server.listen(5002, () => resolve()));
-  const BASE = 'http://localhost:5002/api';
-
-  try {
-    // Setup test customer and products
-    const bizRes = await fetch(`${BASE}/business`);
-    const bizJson = await bizRes.json();
-    const businessId = bizJson.data.id;
-
-    // Clean up any unreferenced test customers from prior runs for idempotency
-    await prisma.customer.deleteMany({
-      where: {
-        businessId,
-        email: { in: ['billing@enterpriseclient.in', 'qa.test@vioratech.com'] },
-        invoices: { none: {} },
-      },
-    });
-
-    // Create unique test customer
-    let custRes = await fetch(`${BASE}/customers`, {
+  // Create unique test customer
+  const custRes = await fetch(`${BASE}/customers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -40,7 +29,7 @@ async function runTests() {
         state: 'Haryana',
       }),
     });
-    let custJson = await custRes.json();
+    const custJson = await custRes.json();
     let customerId = custJson.data?.id;
     if (!customerId) {
       const fallback = await prisma.customer.findFirst({
@@ -419,19 +408,17 @@ async function runTests() {
     // Re-fetch issue1 invoice which contains prod1
     const refetchedInvRes = await fetch(`${BASE}/invoices/${issue1.id}`);
     const refetchedInv = (await refetchedInvRes.json()).data;
-    const historicalItem = refetchedInv.items.find((it: any) => it.productId === prod1.id);
+    const historicalItem = refetchedInv.items.find((it: { productId?: string }) => it.productId === prod1.id);
 
     if (historicalItem.unitPrice !== 500) {
       throw new Error(`Historical snapshot was corrupted! Expected ₹500, got ₹${historicalItem.unitPrice}`);
     }
     console.log('✅ 16. Historical snapshot integrity verified: Stored unit price remains ₹500 despite product price update to ₹9,999');
     console.log('\n🎉 ALL 16 PHASE 3 VERIFICATION TESTS PASSED SUCCESSFULLY!\n');
+    return { customerId, prod1Id: prod1.id };
+}
 
-    // =========================================================================
-    // =========================================================================
-    // PHASE 4 COMPREHENSIVE AUTOMATED TEST SUITE (15 SCENARIOS)
-    // =========================================================================
-    // =========================================================================
+async function testPhase4(BASE: string, businessId: string) {
     console.log('🧪 Starting Phase 4 Payment Tracking, Dashboard Analytics & Reports Tests...\n');
 
     // Setup dedicated customer for Phase 4 tests
@@ -466,7 +453,7 @@ async function runTests() {
     }
 
     // Helper to create & issue invoice
-    async function createAndIssueInvoice(items: any[], invoiceDate = '2026-10-24') {
+    async function createAndIssueInvoice(items: Array<Record<string, unknown>>, invoiceDate = '2026-10-24') {
       const invRes = await fetch(`${BASE}/invoices`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -659,7 +646,7 @@ async function runTests() {
       }),
     ]);
 
-    const statuses = [concurRes1.status, concurRes2.status].sort();
+    const statuses = [concurRes1.status, concurRes2.status].sort((a, b) => a - b);
     if (statuses[0] !== 201 || statuses[1] !== 400) {
       throw new Error(`Test 8 Concurrent Failed: Expected one 201 and one 400, got ${statuses.join(', ')}`);
     }
@@ -738,10 +725,10 @@ async function runTests() {
     const monthlyReportRes = await fetch(`${BASE}/reports/sales?groupBy=month`);
     const monthlyReport = (await monthlyReportRes.json()).data;
 
-    const aprSales = monthlyReport.salesTimeline.find((s: any) => s.period === '2026-04');
-    const maySales = monthlyReport.salesTimeline.find((s: any) => s.period === '2026-05');
-    const aprCollections = monthlyReport.collectionsTimeline.find((c: any) => c.period === '2026-04');
-    const mayCollections = monthlyReport.collectionsTimeline.find((c: any) => c.period === '2026-05');
+    const aprSales = monthlyReport.salesTimeline.find((s: { period: string; grandTotal: number }) => s.period === '2026-04');
+    const maySales = monthlyReport.salesTimeline.find((s: { period: string; grandTotal: number }) => s.period === '2026-05');
+    const aprCollections = monthlyReport.collectionsTimeline.find((c: { period: string; totalCollected: number }) => c.period === '2026-04');
+    const mayCollections = monthlyReport.collectionsTimeline.find((c: { period: string; totalCollected: number }) => c.period === '2026-05');
 
     if (!aprSales || aprSales.grandTotal < 3500) {
       throw new Error(`Test 11 Failed: Sales not attributed to invoice date (2026-04): ${JSON.stringify(aprSales)}`);
@@ -759,10 +746,10 @@ async function runTests() {
     const dailyReportRes = await fetch(`${BASE}/reports/sales?groupBy=day`);
     const dailyReport = (await dailyReportRes.json()).data;
 
-    const dailySalesSum = dailyReport.salesTimeline.reduce((acc: number, item: any) => acc + item.grandTotal, 0);
-    const monthlySalesSum = monthlyReport.salesTimeline.reduce((acc: number, item: any) => acc + item.grandTotal, 0);
-    const dailyCollSum = dailyReport.collectionsTimeline.reduce((acc: number, item: any) => acc + item.totalCollected, 0);
-    const monthlyCollSum = monthlyReport.collectionsTimeline.reduce((acc: number, item: any) => acc + item.totalCollected, 0);
+    const dailySalesSum = dailyReport.salesTimeline.reduce((acc: number, item: { grandTotal: number }) => acc + item.grandTotal, 0);
+    const monthlySalesSum = monthlyReport.salesTimeline.reduce((acc: number, item: { grandTotal: number }) => acc + item.grandTotal, 0);
+    const dailyCollSum = dailyReport.collectionsTimeline.reduce((acc: number, item: { totalCollected: number }) => acc + item.totalCollected, 0);
+    const monthlyCollSum = monthlyReport.collectionsTimeline.reduce((acc: number, item: { totalCollected: number }) => acc + item.totalCollected, 0);
 
     if (Math.abs(dailySalesSum - monthlySalesSum) > 0.01) {
       throw new Error(`Test 13 Failed: Daily sales sum (₹${dailySalesSum}) !== Monthly sales sum (₹${monthlySalesSum})`);
@@ -800,7 +787,7 @@ async function runTests() {
       emptySummary.metrics.totalInvoices.count !== 0 ||
       emptySummary.metrics.amountCollected.amount !== 0 ||
       emptySummary.metrics.outstandingBalance.amount !== 0 ||
-      isNaN(emptySummary.metrics.amountCollected.collectionRate)
+      Number.isNaN(emptySummary.metrics.amountCollected.collectionRate)
     ) {
       throw new Error(`Test 15 Failed: Empty summary produced non-zero or NaN values: ${JSON.stringify(emptySummary)}`);
     }
@@ -818,13 +805,15 @@ async function runTests() {
     }
     console.log('✅ 15. Empty database periods produce valid empty summaries (0 sales, 0 collections, 0 invoices, 0 NaN)');
     console.log('\n🎉 ALL 15 PHASE 4 VERIFICATION TESTS PASSED SUCCESSFULLY!\n');
+}
 
-    // =========================================================================
-    // =========================================================================
-    // PHASE 5: FINAL QA, CRUD INTEGRITY, AND SECURITY VERIFICATIONS
-    // =========================================================================
-    // =========================================================================
-    console.log('🧪 Starting Phase 5 Final QA, CRUD Integrity & Security Tests...\n');
+async function testPhase5(
+  BASE: string,
+  businessId: string,
+  context: { customerId: string; prod1Id: string }
+) {
+  const { customerId, prod1Id } = context;
+  console.log('🧪 Starting Phase 5 Final QA, CRUD Integrity & Security Tests...\n');
 
     // =========================================================================
     // TEST 5.1: Customer CRUD, Search & Soft Deletion
@@ -877,7 +866,7 @@ async function runTests() {
     // Search Customer
     const searchCustRes = await fetch(`${BASE}/customers?search=QA+Customer`);
     const searchCustJson = (await searchCustRes.json()).data;
-    if (!searchCustJson.customers.some((c: any) => c.id === newCust.id)) {
+    if (!searchCustJson.customers.some((c: { id: string }) => c.id === newCust.id)) {
       throw new Error(`Test 5.1 Search Customer Failed: ${JSON.stringify(searchCustJson)}`);
     }
 
@@ -963,7 +952,7 @@ async function runTests() {
     // Search Product
     const searchProdRes = await fetch(`${BASE}/products?search=Security+Auditing`);
     const searchProdJson = (await searchProdRes.json()).data;
-    if (!searchProdJson.products.some((p: any) => p.id === newProd.id)) {
+    if (!searchProdJson.products.some((p: { id: string }) => p.id === newProd.id)) {
       throw new Error(`Test 5.3 Search Product Failed: ${JSON.stringify(searchProdJson)}`);
     }
 
@@ -978,11 +967,11 @@ async function runTests() {
     }
 
     // Now test archiving when product HAS historical invoice items (referencing prod1 created earlier)
-    const delProdWithInvRes = await fetch(`${BASE}/products/${prod1.id}`, { method: 'DELETE' });
+    const delProdWithInvRes = await fetch(`${BASE}/products/${prod1Id}`, { method: 'DELETE' });
     if (delProdWithInvRes.status !== 200) {
       throw new Error(`Test 5.3 Delete Referenced Product Failed: ${delProdWithInvRes.status}`);
     }
-    const prodArchived = await prisma.product.findUnique({ where: { id: prod1.id } });
+    const prodArchived = await prisma.product.findUnique({ where: { id: prod1Id } });
     if (!prodArchived || !prodArchived.isArchived) {
       throw new Error(`Test 5.3 Referenced product soft delete failed: isArchived is false`);
     }
@@ -1020,10 +1009,9 @@ async function runTests() {
       throw new Error(`Test 5.5 404 error envelope failed: ${JSON.stringify(notFoundJson)}`);
     }
     console.log('✅ 5.5 System Health (/api/health) & Standard Error Envelopes verified');
+}
 
-    // =========================================================================
-    // PHASE 16: MASTER QA AUTOMATED END-TO-END SCENARIO SUITE (TEST A - TEST H)
-    // =========================================================================
+async function testMasterQA(BASE: string, businessId: string) {
     console.log('\n🚀 Starting Master QA Automated End-to-End Scenarios (TEST A - TEST H)...\n');
 
     // --- TEST A: Create customer -> create product -> create invoice -> issue invoice -> download PDF ---
@@ -1168,13 +1156,13 @@ async function runTests() {
         items: [{ descriptionSnapshot: 'Unissued Draft Item', quantity: 1, unitPrice: 99999, taxRate: 18 }],
       }),
     });
-    const draftC = (await draftCRes.json()).data;
+    if (draftCRes.status !== 201) throw new Error(`TEST C: Draft invoice creation failed (${draftCRes.status})`);
 
     const dashRes = await fetch(`${BASE}/dashboard/summary`);
     const dashData = (await dashRes.json()).data;
     const invListRes = await fetch(`${BASE}/invoices?status=ISSUED`);
     const issuedInvoices = (await invListRes.json()).data.invoices;
-    const computedSales = issuedInvoices.reduce((sum: number, inv: any) => sum + Number(inv.grandTotal), 0);
+    const computedSales = issuedInvoices.reduce((sum: number, inv: { grandTotal: number | string }) => sum + Number(inv.grandTotal), 0);
     if (Math.abs(Number(dashData.totalSales) - computedSales) > 0.01) {
       throw new Error(`TEST C: Dashboard total sales does not match sum of issued invoices: dash=${dashData.totalSales}, computed=${computedSales}`);
     }
@@ -1339,11 +1327,15 @@ async function runTests() {
       throw new Error(`TEST H: Customer snapshot was modified on historical invoice! ${invASnapshotCheck?.customerNameSnapshot}`);
     }
     console.log('✅ TEST H PASSED: Customer and Product lifecycles functional while preserving snapshot integrity');
+    return { custA, invA, prodA };
+}
 
-    // =========================================================================
-    // SENIOR DEVELOPER REVIEW REPORT VERIFICATION (TEST R1 - R11)
-    // Directly testing every single bug and requirement reported in Darshan Pandey's review
-    // =========================================================================
+async function testSeniorReviewer(
+  BASE: string,
+  businessId: string,
+  context: { custA: { id: string }; invA: { id: string } }
+) {
+    const { custA, invA } = context;
     console.log('\n🔬 Running Senior Reviewer Specific Edge-Case Tests (R1 - R11)...\n');
 
     // --- TEST R1: Double Issue Concurrency Serialization (Bug B1) ---
@@ -1397,7 +1389,7 @@ async function runTests() {
         }),
       }).then((r) => r.json())
     );
-    const r2DraftResults = await Promise.all(r2DraftPromises);
+    const r2DraftResults = (await Promise.all(r2DraftPromises)) as Array<{ data?: { invoiceNumber?: string } }>;
     const r2InvoiceNumbers = r2DraftResults.map((r) => r.data?.invoiceNumber).filter(Boolean);
     const r2UniqueNumbers = new Set(r2InvoiceNumbers);
 
@@ -1431,10 +1423,10 @@ async function runTests() {
 
     // 0.125 * 100 = 12.50 gross, tax 18% = 2.25, line total = 14.75
     // 0.005 * 100 = 0.50 gross, line total = 0.50
-    if (Number(item0125!.quantity) !== 0.125 || Number(item0125!.lineTotal) !== 14.75) {
+    if (Math.abs(Number(item0125!.quantity) - 0.125) > 0.0001 || Math.abs(Number(item0125!.lineTotal) - 14.75) > 0.01) {
       throw new Error(`TEST R3 Failed: 0.125 quantity was rounded or calculated wrong: qty=${item0125!.quantity}, total=${item0125!.lineTotal}`);
     }
-    if (Number(item0005!.quantity) !== 0.005 || Number(item0005!.lineTotal) !== 0.50) {
+    if (Math.abs(Number(item0005!.quantity) - 0.005) > 0.0001 || Math.abs(Number(item0005!.lineTotal) - 0.50) > 0.01) {
       throw new Error(`TEST R3 Failed: 0.005 quantity was rounded or calculated wrong: qty=${item0005!.quantity}, total=${item0005!.lineTotal}`);
     }
     console.log('✅ TEST R3 PASSED: Quantities 0.125 and 0.005 stored with 4 decimals and calculated exactly (totals: ₹14.75 and ₹0.50)');
@@ -1641,7 +1633,6 @@ async function runTests() {
 
     // --- TEST R11: PDF Page Counts for 1-line and 60-line Invoices (Bug B7) ---
     console.log('--- TEST R11: PDF Page Counts for 1-line and 60-line Invoices ---');
-    const { generateInvoicePdfStream } = await import('./src/services/pdf.service');
     const dummyInvForPdf = (count: number) => ({
       invoiceNumber: 'INV-TEST-PDF',
       invoiceDate: '2026-11-09',
@@ -1679,7 +1670,7 @@ async function runTests() {
       payments: [],
     });
 
-    const getPdfPageCount = (invData: any): Promise<number> => {
+    const getPdfPageCount = (invData: Parameters<typeof generateInvoicePdfStream>[0]): Promise<number> => {
       return new Promise((resolve, reject) => {
         const doc = generateInvoicePdfStream(invData);
         const chunks: Buffer[] = [];
@@ -1693,10 +1684,10 @@ async function runTests() {
       });
     };
 
-    const p1Count = await getPdfPageCount(dummyInvForPdf(1));
-    const p20Count = await getPdfPageCount(dummyInvForPdf(20));
-    const p60Count = await getPdfPageCount(dummyInvForPdf(60));
-    const p100Count = await getPdfPageCount(dummyInvForPdf(100));
+    const p1Count = await getPdfPageCount(dummyInvForPdf(1) as Parameters<typeof generateInvoicePdfStream>[0]);
+    const p20Count = await getPdfPageCount(dummyInvForPdf(20) as Parameters<typeof generateInvoicePdfStream>[0]);
+    const p60Count = await getPdfPageCount(dummyInvForPdf(60) as Parameters<typeof generateInvoicePdfStream>[0]);
+    const p100Count = await getPdfPageCount(dummyInvForPdf(100) as Parameters<typeof generateInvoicePdfStream>[0]);
 
     if (p1Count !== 1) {
       throw new Error(`TEST R11 Failed: 1-line invoice produced ${p1Count} pages instead of 1 page`);
@@ -1711,6 +1702,25 @@ async function runTests() {
       throw new Error(`TEST R11 Failed: 100-line invoice produced ${p100Count} pages instead of 4 pages`);
     }
     console.log(`✅ TEST R11 PASSED: PDF page counts verified inside margins: 1-line = ${p1Count} pg, 20-line = ${p20Count} pg, 60-line = ${p60Count} pg (fixed from 9), 100-line = ${p100Count} pg (zero phantom footer pages)`);
+}
+
+async function runTests() {
+  const app = createApp();
+  const server = http.createServer(app);
+
+  await new Promise<void>((resolve) => server.listen(5002, () => resolve()));
+  const BASE = 'http://localhost:5002/api';
+
+  try {
+    const bizRes = await fetch(`${BASE}/business`);
+    const bizJson = await bizRes.json();
+    const businessId = bizJson.data.id;
+
+    const phase3Ctx = await testPhase3(BASE, businessId);
+    await testPhase4(BASE, businessId);
+    await testPhase5(BASE, businessId, phase3Ctx);
+    const masterCtx = await testMasterQA(BASE, businessId);
+    await testSeniorReviewer(BASE, businessId, masterCtx);
 
     console.log('\n=============================================================');
     console.log('🏆 ALL PHASES & MASTER QA SCENARIOS (TEST A - H) FULLY PASSED!');
@@ -1724,4 +1734,4 @@ async function runTests() {
   }
 }
 
-runTests();
+void runTests();

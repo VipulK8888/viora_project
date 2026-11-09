@@ -61,7 +61,7 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isNaN(payAmt) || payAmt <= 0) {
+    if (Number.isNaN(payAmt) || payAmt <= 0) {
       setError('Payment amount must be greater than zero');
       return;
     }
@@ -96,8 +96,9 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Payment recording failed');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Payment recording failed';
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -162,12 +163,13 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="payment-amount-input" className="block text-xs font-semibold text-slate-700 mb-1">
                 Payment Amount (₹) <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <IndianRupee className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
+                  id="payment-amount-input"
                   type="number"
                   required
                   min="0.01"
@@ -182,12 +184,13 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="payment-date-input" className="block text-xs font-semibold text-slate-700 mb-1">
                 Payment Date <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
+                  id="payment-date-input"
                   type="date"
                   required
                   value={paymentDate}
@@ -199,10 +202,11 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="payment-method-select" className="block text-xs font-semibold text-slate-700 mb-1">
               Payment Method <span className="text-rose-500">*</span>
             </label>
             <select
+              id="payment-method-select"
               value={method}
               onChange={(e) => setMethod(e.target.value)}
               className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 transition-all"
@@ -217,12 +221,13 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="payment-reference-input" className="block text-xs font-semibold text-slate-700 mb-1">
               Reference / Transaction ID / UTR Number
             </label>
             <div className="relative">
               <Hash className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
+                id="payment-reference-input"
                 type="text"
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}

@@ -71,8 +71,9 @@ export const App: React.FC = () => {
       setActionNotice(`Invoice ${issued.invoiceNumber} has been officially issued!`);
       setTimeout(() => setActionNotice(null), 3500);
       loadData();
-    } catch (err: any) {
-      alert(`Error issuing invoice: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error issuing invoice';
+      alert(`Error issuing invoice: ${msg}`);
     }
   };
 

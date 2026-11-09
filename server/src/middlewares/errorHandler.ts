@@ -5,9 +5,9 @@ import { env } from '../config/env';
 export class AppError extends Error {
   public statusCode: number;
   public code: string;
-  public details?: any;
+  public details?: unknown;
 
-  constructor(message: string, statusCode: number = 500, code: string = 'ERR_INTERNAL', details?: any) {
+  constructor(message: string, statusCode: number = 500, code: string = 'ERR_INTERNAL', details?: unknown) {
     super(message);
     this.statusCode = statusCode;
     this.code = code;
@@ -17,23 +17,30 @@ export class AppError extends Error {
 }
 
 export function errorHandler(
-  err: any,
+  err: unknown,
   req: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction
 ) {
   const isAppError = err instanceof AppError;
-  const statusCode = err.statusCode || (err.status ? Number(err.status) : 500);
-  const code = err.code || `ERR_${statusCode}`;
+  const errObj = (typeof err === 'object' && err !== null ? err : {}) as {
+    statusCode?: number;
+    status?: number | string;
+    code?: string;
+    message?: string;
+    details?: unknown;
+  };
+  const statusCode = errObj.statusCode || (errObj.status ? Number(errObj.status) : 500);
+  const code = errObj.code || `ERR_${statusCode}`;
 
   // In production, mask unhandled 500 errors so internal database/stack errors are never leaked
   const message =
     env.NODE_ENV === 'production' && !isAppError && statusCode === 500
       ? 'An unexpected internal error occurred'
-      : err.message || 'Internal Server Error';
+      : errObj.message || 'Internal Server Error';
 
-  const details = isAppError ? err.details : undefined;
+  const details = isAppError ? (err as AppError).details : undefined;
 
   if (env.NODE_ENV !== 'test') {
     console.error(`[Error] ${req.method} ${req.url}:`, err);

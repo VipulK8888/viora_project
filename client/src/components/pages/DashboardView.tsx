@@ -159,9 +159,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Quick Link Entity Cards */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Customer Directory */}
-        <div
+        <button
+          type="button"
           onClick={onNavigateToCustomers}
-          className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs hover:border-amber-300 transition-colors cursor-pointer flex items-center justify-between"
+          className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs hover:border-amber-300 transition-colors cursor-pointer flex items-center justify-between text-left w-full"
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200/60 flex-shrink-0">
@@ -177,12 +178,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <span className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1">
             Manage →
           </span>
-        </div>
+        </button>
 
         {/* Products & Services Catalog */}
-        <div
+        <button
+          type="button"
           onClick={onNavigateToProducts}
-          className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs hover:border-amber-300 transition-colors cursor-pointer flex items-center justify-between"
+          className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs hover:border-amber-300 transition-colors cursor-pointer flex items-center justify-between text-left w-full"
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200/60 flex-shrink-0">
@@ -198,12 +200,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <span className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1">
             Manage →
           </span>
-        </div>
+        </button>
 
         {/* Automated Reminders */}
-        <div
+        <button
+          type="button"
           onClick={onNavigateToReminders}
-          className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs hover:border-amber-300 transition-colors cursor-pointer flex items-center justify-between"
+          className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs hover:border-amber-300 transition-colors cursor-pointer flex items-center justify-between text-left w-full"
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200/60 flex-shrink-0">
@@ -219,7 +222,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <span className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1">
             Open →
           </span>
-        </div>
+        </button>
       </section>
 
       {/* Invoices & Receivables Table */}

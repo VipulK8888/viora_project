@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { prisma } from '../../config/prisma';
+import { prisma, Prisma } from '../../config/prisma';
 import { sendSuccess } from '../../utils/response';
 import { validateRequest } from '../../middlewares/validate';
 import { getOrCreateDefaultBusiness } from '../../utils/businessHelper';
@@ -14,7 +14,7 @@ const isValidCalendarDate = (val: string) => {
   const [y, m, d] = val.split('-').map(Number);
   if (m < 1 || m > 12 || d < 1 || d > 31) return false;
   const parsed = new Date(`${val}T00:00:00Z`);
-  return !isNaN(parsed.getTime());
+  return !Number.isNaN(parsed.getTime());
 };
 
 const dashboardQuerySchema = z.object({
@@ -37,12 +37,12 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const business = await getOrCreateDefaultBusiness();
-      const { startDate, endDate } = req.query as any;
+      const { startDate, endDate } = req.query as { startDate?: string; endDate?: string };
 
       const dateRange = parseDateRangeIST(startDate, endDate);
 
       // 1. Issued invoices filter (by invoiceDate, drafts and cancelled excluded)
-      const invoiceWhere: any = {
+      const invoiceWhere: Prisma.InvoiceWhereInput = {
         businessId: business.id,
         status: 'ISSUED',
       };
@@ -67,7 +67,7 @@ router.get(
       });
 
       // 2. Draft invoices count in period (or overall)
-      const draftWhere: any = {
+      const draftWhere: Prisma.InvoiceWhereInput = {
         businessId: business.id,
         status: 'DRAFT',
       };
@@ -77,7 +77,7 @@ router.get(
       const draftCount = await prisma.invoice.count({ where: draftWhere });
 
       // 3. Payments collected in period (by paymentDate)
-      const paymentWhere: any = {
+      const paymentWhere: Prisma.PaymentWhereInput = {
         invoice: {
           businessId: business.id,
           status: 'ISSUED',

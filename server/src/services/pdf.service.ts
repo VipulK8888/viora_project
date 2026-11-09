@@ -70,8 +70,8 @@ export interface InvoicePdfData {
 }
 
 function formatINR(val: number | string | undefined): string {
-  const num = typeof val === 'number' ? val : parseFloat(String(val || '0'));
-  return 'INR ' + (isNaN(num) ? '0.00' : num.toFixed(2));
+  const num = typeof val === 'number' ? val : Number.parseFloat(String(val || '0'));
+  return 'INR ' + (Number.isNaN(num) ? '0.00' : num.toFixed(2));
 }
 
 /**
@@ -251,7 +251,7 @@ export function generateInvoicePdfStream(invoice: InvoicePdfData): NodeJS.Readab
     x += colWidths.price;
 
     // Discount
-    const discNum = parseFloat(String(item.discountAmount || '0'));
+    const discNum = Number.parseFloat(String(item.discountAmount || '0'));
     doc.text(discNum > 0 ? `-${discNum.toFixed(2)}` : '0.00', x, currentY + 5, { width: colWidths.disc, align: 'right' });
     x += colWidths.disc;
 
@@ -310,7 +310,7 @@ export function generateInvoicePdfStream(invoice: InvoicePdfData): NodeJS.Readab
   };
 
   renderSummaryRow('Gross Subtotal:', formatINR(invoice.subtotal));
-  const discTotalNum = parseFloat(String(invoice.discountTotal || '0'));
+  const discTotalNum = Number.parseFloat(String(invoice.discountTotal || '0'));
   if (discTotalNum > 0) {
     renderSummaryRow('Total Discounts:', `-${formatINR(invoice.discountTotal)}`);
   }

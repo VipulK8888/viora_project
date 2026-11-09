@@ -77,8 +77,9 @@ export const SettingsView: React.FC = () => {
       setSmtpSecure(Boolean(data.smtpSecure));
       setSmtpFrom(data.smtpFrom || '');
       setTestRecipientEmail(data.smtpUser || data.email || '');
-    } catch (err: any) {
-      setError(err.message || 'Failed to load business profile');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to load business profile';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -113,8 +114,9 @@ export const SettingsView: React.FC = () => {
       setBusiness(updated);
       setSuccessMsg('Business and email settings saved successfully');
       setTimeout(() => setSuccessMsg(null), 3500);
-    } catch (err: any) {
-      setError(err.message || 'Failed to save business settings');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to save business settings';
+      setError(msg);
     } finally {
       setIsSaving(false);
     }
@@ -133,10 +135,11 @@ export const SettingsView: React.FC = () => {
         testEmail: testRecipientEmail.trim() || email.trim(),
       });
       setSmtpTestResult(res);
-    } catch (err: any) {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'SMTP Connection Test Failed';
       setSmtpTestResult({
         success: false,
-        message: err.message || 'SMTP Connection Test Failed',
+        message: msg,
       });
     } finally {
       setIsTestingSmtp(false);
@@ -185,10 +188,11 @@ export const SettingsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="biz-name-input" className="block text-xs font-semibold text-slate-700 mb-1">
                 Company / Legal Entity Name <span className="text-rose-500">*</span>
               </label>
               <input
+                id="biz-name-input"
                 type="text"
                 required
                 value={name}
@@ -200,12 +204,13 @@ export const SettingsView: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="biz-email-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   Billing Email <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    id="biz-email-input"
                     type="email"
                     required
                     value={email}
@@ -217,12 +222,13 @@ export const SettingsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="biz-phone-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   Contact Phone <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    id="biz-phone-input"
                     type="text"
                     required
                     value={phone}
@@ -235,12 +241,13 @@ export const SettingsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="biz-address-textarea" className="block text-xs font-semibold text-slate-700 mb-1">
                 Official Registered Address <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <textarea
+                  id="biz-address-textarea"
                   required
                   rows={2}
                   value={address}
@@ -253,10 +260,11 @@ export const SettingsView: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="biz-gstin-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   GSTIN (Tax Identification Number)
                 </label>
                 <input
+                  id="biz-gstin-input"
                   type="text"
                   value={gstin}
                   onChange={(e) => setGstin(e.target.value.toUpperCase())}
@@ -266,10 +274,11 @@ export const SettingsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="biz-state-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   State of Registration (for GST Supply Determination)
                 </label>
                 <input
+                  id="biz-state-input"
                   type="text"
                   value={state}
                   onChange={(e) => setState(e.target.value)}
@@ -289,10 +298,11 @@ export const SettingsView: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="biz-prefix-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   Invoice Number Prefix
                 </label>
                 <input
+                  id="biz-prefix-input"
                   type="text"
                   maxLength={10}
                   value={invoicePrefix}
@@ -306,12 +316,13 @@ export const SettingsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="biz-next-seq-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   Next Sequence Counter
                 </label>
                 <div className="relative">
                   <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    id="biz-next-seq-input"
                     type="text"
                     disabled
                     value={business?.nextInvoiceNumber ?? 1}
@@ -374,10 +385,11 @@ export const SettingsView: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="biz-smtp-host-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   SMTP Host Server
                 </label>
                 <input
+                  id="biz-smtp-host-input"
                   type="text"
                   value={smtpHost}
                   onChange={(e) => setSmtpHost(e.target.value)}
@@ -387,10 +399,11 @@ export const SettingsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="biz-smtp-port-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   Port
                 </label>
                 <input
+                  id="biz-smtp-port-input"
                   type="number"
                   value={smtpPort}
                   onChange={(e) => setSmtpPort(Number(e.target.value) || 587)}
@@ -402,10 +415,11 @@ export const SettingsView: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="biz-smtp-user-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   SMTP Username / Email
                 </label>
                 <input
+                  id="biz-smtp-user-input"
                   type="email"
                   value={smtpUser}
                   onChange={(e) => setSmtpUser(e.target.value)}
@@ -415,11 +429,12 @@ export const SettingsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="biz-smtp-pass-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   SMTP Password / App Password
                 </label>
                 <div className="relative">
                   <input
+                    id="biz-smtp-pass-input"
                     type={showSmtpPassword ? 'text' : 'password'}
                     value={smtpPass}
                     onChange={(e) => setSmtpPass(e.target.value)}
@@ -440,10 +455,11 @@ export const SettingsView: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="biz-smtp-from-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   Custom "From" Header (Optional)
                 </label>
                 <input
+                  id="biz-smtp-from-input"
                   type="text"
                   value={smtpFrom}
                   onChange={(e) => setSmtpFrom(e.target.value)}

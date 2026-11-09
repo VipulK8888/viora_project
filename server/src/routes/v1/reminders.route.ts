@@ -174,14 +174,15 @@ router.post('/smtp-test', async (req: Request, res: Response, next: NextFunction
       data: result,
       timestamp: new Date().toISOString(),
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
     res.status(400).json({
       success: false,
-      message: `SMTP connection failed: ${err.message}`,
+      message: `SMTP connection failed: ${errorMsg}`,
       error: {
         code: 'ERR_SMTP_VERIFICATION',
-        details: err.message,
-        hint: err.message?.includes('Username and Password not accepted')
+        details: errorMsg,
+        hint: errorMsg.includes('Username and Password not accepted')
           ? 'For Gmail: Enable 2-Step Verification on your Google Account, then generate a 16-character App Password at https://myaccount.google.com/apppasswords and use that as the password.'
           : 'Check your SMTP host, port, and security settings.',
       },

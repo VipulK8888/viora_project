@@ -9,6 +9,7 @@ import {
   ReminderQueueData,
   ReminderLogItem,
   ReminderCadenceConfig,
+  SalesReportData,
 } from '../types';
 
 const API_BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
@@ -60,7 +61,7 @@ export async function fetchSalesReport(params?: {
   startDate?: string;
   endDate?: string;
   groupBy?: 'day' | 'month';
-}): Promise<any> {
+}): Promise<SalesReportData> {
   const query = new URLSearchParams();
   if (params?.startDate) query.append('startDate', params.startDate);
   if (params?.endDate) query.append('endDate', params.endDate);
@@ -252,7 +253,14 @@ export async function recordInvoicePayment(
     reference?: string;
     requestKey: string;
   }
-): Promise<any> {
+): Promise<{
+  payment: PaymentRecord;
+  invoiceSummary: {
+    totalPaid: number;
+    balanceRemaining: number;
+    paymentStatus: string;
+  };
+}> {
   const res = await fetch(`${API_BASE}/invoices/${invoiceId}/payments`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -331,7 +339,11 @@ export async function updateCustomer(
   return json.data;
 }
 
-export async function deleteCustomer(id: string): Promise<any> {
+export async function deleteCustomer(id: string): Promise<{
+  success: boolean;
+  message?: string;
+  data?: { id: string; isArchived?: boolean; deleted?: boolean };
+}> {
   const res = await fetch(`${API_BASE}/customers/${id}`, {
     method: 'DELETE',
   });
@@ -409,7 +421,11 @@ export async function updateProduct(
   return json.data;
 }
 
-export async function deleteProduct(id: string): Promise<any> {
+export async function deleteProduct(id: string): Promise<{
+  success: boolean;
+  message?: string;
+  data?: { id: string; isArchived?: boolean; deleted?: boolean };
+}> {
   const res = await fetch(`${API_BASE}/products/${id}`, {
     method: 'DELETE',
   });
@@ -497,7 +513,7 @@ export async function runAutomatedReminders(): Promise<{
   totalEvaluated: number;
   dueProcessed: number;
   skippedCooldown: number;
-  results: any[];
+  results: Array<Record<string, unknown>>;
 }> {
   const res = await fetch(`${API_BASE}/reminders/run`, {
     method: 'POST',
@@ -541,6 +557,10 @@ export async function sendInvoiceEmailReminder(invoiceId: string): Promise<{
   tier: string;
   daysGapApplied: number;
   nextEligibleAt: string;
+  previewUrl?: string | null;
+  logId?: string;
+  isLiveSmtp?: boolean;
+  provider?: string;
 }> {
   const res = await fetch(`${API_BASE}/reminders/invoices/${invoiceId}/email`, {
     method: 'POST',
@@ -554,7 +574,13 @@ export async function sendInvoiceEmailReminder(invoiceId: string): Promise<{
   return json.data;
 }
 
-export async function sendInvoiceBothReminders(invoiceId: string): Promise<any> {
+export async function sendInvoiceBothReminders(invoiceId: string): Promise<{
+  success: boolean;
+  results?: {
+    whatsapp?: { success: boolean; logId?: string; whatsAppUrl?: string; error?: string };
+    email?: { success: boolean; logId?: string; previewUrl?: string | null; error?: string };
+  };
+}> {
   const res = await fetch(`${API_BASE}/reminders/invoices/${invoiceId}/both`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -587,7 +613,7 @@ export async function testReminderSimulation(params: {
   amount?: number;
   customerName?: string;
   invoiceNumber?: string;
-}): Promise<any> {
+}): Promise<Record<string, unknown>> {
   const res = await fetch(`${API_BASE}/reminders/test`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

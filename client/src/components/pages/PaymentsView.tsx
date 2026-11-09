@@ -49,8 +49,9 @@ export const PaymentsView: React.FC<PaymentsViewProps> = ({
       });
       setPayments(res.payments);
       setTotalCount(res.totalCount);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load payments');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to load payments';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }

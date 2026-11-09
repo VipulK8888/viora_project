@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { prisma } from '../../config/prisma';
+import { prisma, Prisma } from '../../config/prisma';
 import { sendSuccess } from '../../utils/response';
 import { validateRequest } from '../../middlewares/validate';
 import { AppError } from '../../middlewares/errorHandler';
@@ -21,7 +21,7 @@ export const createPaymentSchema = z.object({
     }, 'Payment amount cannot have more than 2 decimal places (fractional paisa is not allowed)'),
   paymentDate: z
     .string()
-    .refine((val) => !isNaN(Date.parse(val)), {
+    .refine((val) => !Number.isNaN(Date.parse(val)), {
       message: 'Invalid payment date format',
     })
     .optional(),
@@ -51,9 +51,18 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const business = await getOrCreateDefaultBusiness();
-      const { invoiceId, customerId, search, method, startDate, endDate, page, limit } = req.query as any;
+      const { invoiceId, customerId, search, method, startDate, endDate, page, limit } = req.query as unknown as {
+        invoiceId?: string;
+        customerId?: string;
+        search?: string;
+        method?: string;
+        startDate?: string;
+        endDate?: string;
+        page: number;
+        limit: number;
+      };
 
-      const where: any = {
+      const where: Prisma.PaymentWhereInput = {
         invoice: {
           businessId: business.id,
         },
@@ -64,11 +73,14 @@ router.get(
       }
 
       if (customerId) {
-        where.invoice.customerId = customerId;
+        where.invoice = {
+          businessId: business.id,
+          customerId,
+        };
       }
 
       if (method && method !== 'ALL') {
-        where.method = method;
+        where.method = method as 'CASH' | 'UPI' | 'BANK_TRANSFER' | 'CHEQUE' | 'OTHER';
       }
 
       const dateRange = parseDateRangeIST(startDate, endDate);
@@ -167,7 +179,7 @@ export async function handleRecordPayment(
         Array<{
           id: string;
           invoiceNumber: string;
-          grandTotal: any;
+          grandTotal: string | number | Prisma.Decimal;
           status: string;
         }>
       >`
@@ -252,13 +264,16 @@ export async function handleRecordPayment(
         },
       };
     });
-  } catch (error: any) {
-    if (error?.code === 'P2002' && error?.meta?.target?.includes('requestKey')) {
-      throw new AppError(
-        `Duplicate payment submission detected for requestKey: ${body.requestKey}`,
-        409,
-        'ERR_DUPLICATE_PAYMENT_REQUEST'
-      );
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
+      const meta = (error as { meta?: { target?: string[] } }).meta;
+      if (meta?.target?.includes('requestKey')) {
+        throw new AppError(
+          `Duplicate payment submission detected for requestKey: ${body.requestKey}`,
+          409,
+          'ERR_DUPLICATE_PAYMENT_REQUEST'
+        );
+      }
     }
     throw error;
   }

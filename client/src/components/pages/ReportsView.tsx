@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchSalesReport } from '../../services/api';
+import { SalesReportData, SalesTimelineEntry, CollectionsTimelineEntry } from '../../types';
 import {
   IndianRupee,
   Receipt,
@@ -11,7 +12,7 @@ import {
 } from 'lucide-react';
 
 export const ReportsView: React.FC = () => {
-  const [reportData, setReportData] = useState<any>(null);
+  const [reportData, setReportData] = useState<SalesReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [groupBy, setGroupBy] = useState<'day' | 'month'>('day');
@@ -28,8 +29,9 @@ export const ReportsView: React.FC = () => {
         groupBy,
       });
       setReportData(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load sales report');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to load sales report';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -148,10 +150,10 @@ export const ReportsView: React.FC = () => {
                 </div>
               </div>
               <div className="text-xl font-bold text-slate-900 mt-2">
-                {formatCurrency(summary?.totalSales)}
+                {formatCurrency(summary?.totalSales || 0)}
               </div>
               <div className="text-[11px] text-slate-400 mt-1">
-                {summary?.totalIssuedInvoices} issued invoices
+                {summary?.totalIssuedInvoices ?? 0} issued invoices
               </div>
             </div>
 
@@ -165,10 +167,10 @@ export const ReportsView: React.FC = () => {
                 </div>
               </div>
               <div className="text-xl font-bold text-emerald-700 mt-2">
-                {formatCurrency(summary?.totalCollected)}
+                {formatCurrency(summary?.totalCollected || 0)}
               </div>
               <div className="text-[11px] text-slate-400 mt-1">
-                {summary?.totalPayments} settlements recorded
+                {summary?.totalPayments ?? 0} settlements recorded
               </div>
             </div>
 
@@ -182,7 +184,7 @@ export const ReportsView: React.FC = () => {
                 </div>
               </div>
               <div className="text-xl font-bold text-amber-700 mt-2">
-                {formatCurrency(summary?.netOutstanding)}
+                {formatCurrency(summary?.netOutstanding || 0)}
               </div>
               <div className="text-[11px] text-slate-400 mt-1">
                 Active receivables pending collection
@@ -199,7 +201,7 @@ export const ReportsView: React.FC = () => {
                 </div>
               </div>
               <div className="text-xl font-bold text-slate-900 mt-2">
-                {formatCurrency(summary?.totalTax)}
+                {formatCurrency(summary?.totalTax || 0)}
               </div>
               <div className="text-[11px] text-slate-400 mt-1">
                 Total statutory tax liability
@@ -234,15 +236,15 @@ export const ReportsView: React.FC = () => {
 
             {/* Chart Area */}
             {(() => {
-              const salesMap = new Map((reportData?.salesTimeline || []).map((s: any) => [s.period, s.grandTotal]));
-              const collectionsMap = new Map((reportData?.collectionsTimeline || []).map((c: any) => [c.period, c.totalCollected]));
+              const salesMap = new Map((reportData?.salesTimeline || []).map((s: SalesTimelineEntry) => [s.period, s.grandTotal]));
+              const collectionsMap = new Map((reportData?.collectionsTimeline || []).map((c: CollectionsTimelineEntry) => [c.period, c.totalCollected]));
 
               const allPeriods = Array.from(
                 new Set([
-                  ...(reportData?.salesTimeline || []).map((s: any) => s.period),
-                  ...(reportData?.collectionsTimeline || []).map((c: any) => c.period),
+                  ...(reportData?.salesTimeline || []).map((s: SalesTimelineEntry) => s.period),
+                  ...(reportData?.collectionsTimeline || []).map((c: CollectionsTimelineEntry) => c.period),
                 ])
-              ).sort();
+              ).sort((a, b) => a.localeCompare(b));
 
               const chartData = allPeriods.map((period) => ({
                 period,
@@ -337,7 +339,7 @@ export const ReportsView: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {reportData?.salesTimeline?.map((item: any) => (
+                      {reportData?.salesTimeline?.map((item: SalesTimelineEntry) => (
                         <tr key={item.period} className="hover:bg-slate-50">
                           <td className="py-2.5 px-4 font-mono font-medium text-slate-800">
                             {item.period}
@@ -386,7 +388,7 @@ export const ReportsView: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {reportData?.collectionsTimeline?.map((item: any) => (
+                      {reportData?.collectionsTimeline?.map((item: CollectionsTimelineEntry) => (
                         <tr key={item.period} className="hover:bg-slate-50">
                           <td className="py-2.5 px-4 font-mono font-medium text-slate-800">
                             {item.period}

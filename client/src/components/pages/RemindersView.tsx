@@ -29,6 +29,22 @@ import {
   testReminderSimulation,
 } from '../../services/api';
 
+interface ReminderSimulationData {
+  cadenceRule: string;
+  simulatedSchedule?: Array<{ day: string; action: string }>;
+  daysGap: number;
+  previewUrl?: string | null;
+  whatsapp?: {
+    url?: string;
+    messagePreview?: string;
+  };
+  email?: {
+    subject?: string;
+    htmlPreview?: string;
+    textPreview?: string;
+  };
+}
+
 export const RemindersView: React.FC = () => {
   const [data, setData] = useState<ReminderQueueData | null>(null);
   const [logs, setLogs] = useState<ReminderLogItem[]>([]);
@@ -54,8 +70,9 @@ export const RemindersView: React.FC = () => {
       ]);
       setData(queueRes);
       setLogs(logsRes);
-    } catch (err: any) {
-      showToast(err.message || 'Failed to load reminders data', 'error');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to load reminders data';
+      showToast(msg, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +88,7 @@ export const RemindersView: React.FC = () => {
   const [testEmail, setTestEmail] = useState('');
   const [testAmount, setTestAmount] = useState<number>(75000);
   const [testName, setTestName] = useState('Valued Client');
-  const [testSimulationResult, setTestSimulationResult] = useState<any>(null);
+  const [testSimulationResult, setTestSimulationResult] = useState<ReminderSimulationData | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [emailPreviewTab, setEmailPreviewTab] = useState<'HTML' | 'TEXT'>('HTML');
 
@@ -85,9 +102,10 @@ export const RemindersView: React.FC = () => {
         customerName: testName || 'Valued Client',
         invoiceNumber: 'INV-TEST-2026',
       });
-      setTestSimulationResult(res);
-    } catch (err: any) {
-      showToast(err.message || 'Simulation failed', 'error');
+      setTestSimulationResult(res as unknown as ReminderSimulationData);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Simulation failed';
+      showToast(msg, 'error');
     } finally {
       setIsSimulating(false);
     }
@@ -96,7 +114,7 @@ export const RemindersView: React.FC = () => {
   const handleOpenTestModal = () => {
     setIsTestModalOpen(true);
     if (!testSimulationResult) {
-      runTestSimulation(75000);
+      void runTestSimulation(75000);
     }
   };
 
@@ -109,8 +127,9 @@ export const RemindersView: React.FC = () => {
         'success'
       );
       await loadData();
-    } catch (err: any) {
-      showToast(err.message || 'Automated sweep failed', 'error');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Automated sweep failed';
+      showToast(msg, 'error');
     } finally {
       setIsRunningSweep(false);
     }
@@ -125,8 +144,9 @@ export const RemindersView: React.FC = () => {
       }
       showToast(`WhatsApp reminder dispatched for ${item.invoiceNumber}`, 'success');
       await loadData();
-    } catch (err: any) {
-      showToast(err.message || 'Failed to send WhatsApp reminder', 'error');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to send WhatsApp reminder';
+      showToast(msg, 'error');
     } finally {
       setActionLoadingId(null);
     }
@@ -136,14 +156,15 @@ export const RemindersView: React.FC = () => {
     try {
       setActionLoadingId(`${item.invoiceId}-email`);
       const res = await sendInvoiceEmailReminder(item.invoiceId);
-      if (res && (res as any).previewUrl) {
+      if (res && res.previewUrl) {
         showToast(`Email dispatched to ${item.customerEmail}! Click Logs tab to view online preview.`, 'success');
       } else {
         showToast(`Email reminder sent to ${item.customerEmail} (${item.invoiceNumber})`, 'success');
       }
       await loadData();
-    } catch (err: any) {
-      showToast(err.message || 'Failed to send email reminder', 'error');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to send email reminder';
+      showToast(msg, 'error');
     } finally {
       setActionLoadingId(null);
     }
@@ -158,8 +179,9 @@ export const RemindersView: React.FC = () => {
       }
       showToast(`Both Email and WhatsApp reminders triggered for ${item.invoiceNumber}`, 'success');
       await loadData();
-    } catch (err: any) {
-      showToast(err.message || 'Failed to trigger reminders', 'error');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to trigger reminders';
+      showToast(msg, 'error');
     } finally {
       setActionLoadingId(null);
     }
@@ -198,8 +220,6 @@ export const RemindersView: React.FC = () => {
           className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-xl border text-xs flex items-center gap-2.5 animate-in slide-in-from-bottom-2 ${
             toast.type === 'error'
               ? 'bg-rose-950 text-rose-100 border-rose-800'
-              : toast.type === 'info'
-              ? 'bg-slate-900 text-slate-100 border-slate-700'
               : 'bg-slate-900 text-slate-100 border-slate-700'
           }`}
         >
@@ -387,7 +407,7 @@ export const RemindersView: React.FC = () => {
               ].map((f) => (
                 <button
                   key={f.id}
-                  onClick={() => setFilterType(f.id as any)}
+                  onClick={() => setFilterType(f.id as 'ALL' | 'DUE' | 'COOLDOWN' | 'HIGH')}
                   className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
                     filterType === f.id
                       ? 'bg-slate-900 text-white'
@@ -681,15 +701,15 @@ export const RemindersView: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
               {/* Preset Amount Selector */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <span className="block text-xs font-bold text-slate-700 mb-1.5">
                   1. Select or Enter Outstanding Bill Amount (Tests Tier & Days Gap)
-                </label>
+                </span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-2.5">
                   <button
                     type="button"
                     onClick={() => {
                       setTestAmount(75000);
-                      runTestSimulation(75000);
+                      void runTestSimulation(75000);
                     }}
                     className={`p-2.5 rounded-xl border text-left transition-all ${
                       testAmount >= 50000
@@ -706,7 +726,7 @@ export const RemindersView: React.FC = () => {
                     type="button"
                     onClick={() => {
                       setTestAmount(25000);
-                      runTestSimulation(25000);
+                      void runTestSimulation(25000);
                     }}
                     className={`p-2.5 rounded-xl border text-left transition-all ${
                       testAmount >= 10000 && testAmount < 50000
@@ -723,7 +743,7 @@ export const RemindersView: React.FC = () => {
                     type="button"
                     onClick={() => {
                       setTestAmount(4500);
-                      runTestSimulation(4500);
+                      void runTestSimulation(4500);
                     }}
                     className={`p-2.5 rounded-xl border text-left transition-all ${
                       testAmount < 10000
@@ -738,15 +758,16 @@ export const RemindersView: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500 font-medium">Custom Amount (₹):</span>
+                  <label htmlFor="sim-custom-amount-input" className="text-xs text-slate-500 font-medium">Custom Amount (₹):</label>
                   <input
+                    id="sim-custom-amount-input"
                     type="number"
                     value={testAmount}
                     disabled={isSimulating}
                     onChange={(e) => {
                       const val = Number(e.target.value) || 0;
                       setTestAmount(val);
-                      runTestSimulation(val);
+                      void runTestSimulation(val);
                     }}
                     className="w-36 px-2.5 py-1 text-xs border border-slate-200 rounded-lg font-mono font-bold text-slate-900"
                   />
@@ -757,15 +778,16 @@ export const RemindersView: React.FC = () => {
               {/* Recipient Details */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  <label htmlFor="sim-client-name-input" className="block text-[11px] font-semibold text-slate-700 mb-1">
                     Client Name
                   </label>
                   <input
+                    id="sim-client-name-input"
                     type="text"
                     value={testName}
                     onChange={(e) => {
                       setTestName(e.target.value);
-                      runTestSimulation(testAmount, testPhone, testEmail);
+                      void runTestSimulation(testAmount, testPhone, testEmail);
                     }}
                     placeholder="e.g. Vipul"
                     className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-800"
@@ -773,17 +795,18 @@ export const RemindersView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  <label htmlFor="sim-test-phone-input" className="block text-[11px] font-semibold text-slate-700 mb-1">
                     Your Test Mobile / WhatsApp Number
                   </label>
                   <div className="relative">
                     <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                     <input
+                      id="sim-test-phone-input"
                       type="text"
                       value={testPhone}
                       onChange={(e) => {
                         setTestPhone(e.target.value);
-                        runTestSimulation(testAmount, e.target.value, testEmail);
+                        void runTestSimulation(testAmount, e.target.value, testEmail);
                       }}
                       placeholder="e.g. 9876543210"
                       className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-800"
@@ -793,17 +816,18 @@ export const RemindersView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  <label htmlFor="sim-test-email-input" className="block text-[11px] font-semibold text-slate-700 mb-1">
                     Your Test Email Address
                   </label>
                   <div className="relative">
                     <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                     <input
+                      id="sim-test-email-input"
                       type="email"
                       value={testEmail}
                       onChange={(e) => {
                         setTestEmail(e.target.value);
-                        runTestSimulation(testAmount, testPhone, e.target.value);
+                        void runTestSimulation(testAmount, testPhone, e.target.value);
                       }}
                       placeholder="e.g. you@company.com"
                       className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-800"
@@ -839,18 +863,20 @@ export const RemindersView: React.FC = () => {
                         <MessageSquare className="w-4 h-4 text-emerald-600" />
                         <span className="text-xs font-bold text-slate-900">WhatsApp Reminder Ready</span>
                       </div>
-                      <a
-                        href={testSimulationResult.whatsapp.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition-colors"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Open in WhatsApp Live</span>
-                      </a>
+                      {testSimulationResult.whatsapp?.url && (
+                        <a
+                          href={testSimulationResult.whatsapp.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition-colors"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Open in WhatsApp Live</span>
+                        </a>
+                      )}
                     </div>
                     <pre className="p-3 bg-white border border-emerald-100 rounded-lg text-[11px] text-slate-700 font-mono whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
-                      {testSimulationResult.whatsapp.messagePreview}
+                      {testSimulationResult.whatsapp?.messagePreview || 'No preview generated'}
                     </pre>
                   </div>
 
@@ -884,7 +910,7 @@ export const RemindersView: React.FC = () => {
                     </div>
 
                     <div className="text-[11px] text-slate-500 font-mono bg-white p-2 rounded-lg border border-slate-200">
-                      <strong>Subject:</strong> {testSimulationResult.email.subject}
+                      <strong>Subject:</strong> {testSimulationResult.email?.subject || 'N/A'}
                     </div>
 
                     {testSimulationResult.previewUrl && (
@@ -906,13 +932,13 @@ export const RemindersView: React.FC = () => {
                       <div className="border border-slate-200 rounded-lg overflow-hidden max-h-64 overflow-y-auto bg-white">
                         <iframe
                           title="Email Preview"
-                          srcDoc={testSimulationResult.email.htmlPreview}
+                          srcDoc={testSimulationResult.email?.htmlPreview || ''}
                           className="w-full h-64 border-0"
                         />
                       </div>
                     ) : (
                       <pre className="p-3 bg-white border border-slate-200 rounded-lg text-[11px] text-slate-700 font-mono whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
-                        {testSimulationResult.email.textPreview}
+                        {testSimulationResult.email?.textPreview || 'No text preview available'}
                       </pre>
                     )}
                   </div>

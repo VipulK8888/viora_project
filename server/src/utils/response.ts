@@ -1,13 +1,13 @@
 import { Response } from 'express';
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   message?: string;
   data?: T;
   error?: {
     message: string;
     code?: string;
-    details?: any;
+    details?: unknown;
   };
   timestamp: string;
 }
@@ -32,9 +32,9 @@ export function sendError(
   message: string,
   statusCode: number = 500,
   code?: string,
-  details?: any
+  details?: unknown
 ): Response {
-  const payload: ApiResponse = {
+  const payload: ApiResponse<never> = {
     success: false,
     error: {
       message,

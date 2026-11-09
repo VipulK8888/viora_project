@@ -45,8 +45,9 @@ export const CustomersView: React.FC = () => {
     try {
       const res = await fetchCustomers({ search: searchQuery });
       setCustomers(res.customers);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load customers');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to load customers';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -126,8 +127,9 @@ export const CustomersView: React.FC = () => {
       setBillingAddress('');
       setGstin('');
       loadData();
-    } catch (err: any) {
-      alert(`Error saving customer: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error saving customer';
+      alert(`Error saving customer: ${msg}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -146,8 +148,9 @@ export const CustomersView: React.FC = () => {
       setToastMessage(hasInvoices ? 'Customer archived successfully' : 'Customer removed');
       setTimeout(() => setToastMessage(null), 3000);
       loadData();
-    } catch (err: any) {
-      alert(`Error removing customer: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error removing customer';
+      alert(`Error removing customer: ${msg}`);
     }
   };
 
@@ -352,10 +355,11 @@ export const CustomersView: React.FC = () => {
 
             <form onSubmit={handleSaveCustomer} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="cust-name-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   Customer / Business Name <span className="text-rose-500">*</span>
                 </label>
                 <input
+                  id="cust-name-input"
                   type="text"
                   required
                   value={name}
@@ -367,10 +371,11 @@ export const CustomersView: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label htmlFor="cust-phone-input" className="block text-xs font-semibold text-slate-700 mb-1">
                     Phone Number <span className="text-rose-500">*</span>
                   </label>
                   <input
+                    id="cust-phone-input"
                     type="text"
                     required
                     value={phone}
@@ -381,10 +386,11 @@ export const CustomersView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label htmlFor="cust-email-input" className="block text-xs font-semibold text-slate-700 mb-1">
                     Email Address
                   </label>
                   <input
+                    id="cust-email-input"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -395,10 +401,11 @@ export const CustomersView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="cust-address-textarea" className="block text-xs font-semibold text-slate-700 mb-1">
                   Billing Address <span className="text-rose-500">*</span>
                 </label>
                 <textarea
+                  id="cust-address-textarea"
                   required
                   rows={2}
                   value={billingAddress}
@@ -409,10 +416,11 @@ export const CustomersView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="cust-gstin-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   GSTIN (Tax Identifier, optional)
                 </label>
                 <input
+                  id="cust-gstin-input"
                   type="text"
                   value={gstin}
                   onChange={(e) => setGstin(e.target.value.toUpperCase())}

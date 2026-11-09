@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import crypto from 'crypto';
-import { prisma } from '../../config/prisma';
+import { prisma, Prisma } from '../../config/prisma';
 import { sendSuccess } from '../../utils/response';
 import { validateRequest } from '../../middlewares/validate';
 import { AppError } from '../../middlewares/errorHandler';
@@ -33,7 +33,7 @@ const isValidCalendarDate = (val: string) => {
   const [y, m, d] = val.split('-').map(Number);
   if (m < 1 || m > 12 || d < 1 || d > 31) return false;
   const parsed = new Date(`${val}T00:00:00Z`);
-  return !isNaN(parsed.getTime());
+  return !Number.isNaN(parsed.getTime());
 };
 
 const createInvoiceSchema = z.object({
@@ -78,14 +78,23 @@ router.get(
         endDate,
         page,
         limit,
-      } = req.query as any;
+      } = req.query as unknown as {
+        status: string;
+        paymentStatus: string;
+        customerId?: string;
+        search?: string;
+        startDate?: string;
+        endDate?: string;
+        page: number;
+        limit: number;
+      };
 
-      const where: any = {
+      const where: Prisma.InvoiceWhereInput = {
         businessId: business.id,
       };
 
       if (status !== 'ALL') {
-        where.status = status;
+        where.status = status as 'DRAFT' | 'ISSUED' | 'CANCELLED';
       }
 
       if (customerId) {
@@ -106,7 +115,31 @@ router.get(
         ];
       }
 
-      let invoices: any[] = [];
+      interface InvoiceListItem {
+        id: string;
+        invoiceNumber: string;
+        customerId: string;
+        customerName: string;
+        customerEmail: string | null;
+        invoiceDate: string;
+        dueDate: string;
+        status: string;
+        placeOfSupply: string | null;
+        isInterState: boolean;
+        subtotal: number;
+        discountTotal: number;
+        taxableAmount: number;
+        cgstTotal: number;
+        sgstTotal: number;
+        igstTotal: number;
+        taxTotal: number;
+        grandTotal: number;
+        paymentStatus: string;
+        totalPaid: number;
+        balanceRemaining: number;
+        createdAt: Date;
+      }
+      let invoices: InvoiceListItem[] = [];
       let totalCount = 0;
 
       if (paymentStatus === 'ALL') {
@@ -461,8 +494,8 @@ router.post(
 
       // Validate product existence if productId provided
       const productIds = items
-        .map((i: any) => i.productId)
-        .filter((pid: any): pid is string => typeof pid === 'string' && pid.trim().length > 0);
+        .map((i: { productId?: string }) => i.productId)
+        .filter((pid: string | undefined): pid is string => typeof pid === 'string' && pid.trim().length > 0);
       if (productIds.length > 0) {
         const existingProducts = await prisma.product.findMany({
           where: { id: { in: productIds }, businessId: business.id },
@@ -486,8 +519,9 @@ router.post(
       let calculated;
       try {
         calculated = calculateInvoiceTotals(items, isInterState);
-      } catch (calcErr: any) {
-        throw new AppError(calcErr.message || 'Invoice calculation error', 400, 'ERR_INVALID_INVOICE_CALCULATION');
+      } catch (calcErr: unknown) {
+        const errorMsg = calcErr instanceof Error ? calcErr.message : 'Invoice calculation error';
+        throw new AppError(errorMsg, 400, 'ERR_INVALID_INVOICE_CALCULATION');
       }
 
       if (calculated.grandTotal.lessThanOrEqualTo(0)) {
@@ -619,8 +653,8 @@ router.put(
 
       // Validate product existence if productId provided
       const productIds = items
-        .map((i: any) => i.productId)
-        .filter((pid: any): pid is string => typeof pid === 'string' && pid.trim().length > 0);
+        .map((i: { productId?: string }) => i.productId)
+        .filter((pid: string | undefined): pid is string => typeof pid === 'string' && pid.trim().length > 0);
       if (productIds.length > 0) {
         const existingProducts = await prisma.product.findMany({
           where: { id: { in: productIds }, businessId: business.id },
@@ -637,8 +671,9 @@ router.put(
       let calculated;
       try {
         calculated = calculateInvoiceTotals(items, isInterState);
-      } catch (calcErr: any) {
-        throw new AppError(calcErr.message || 'Invoice calculation error', 400, 'ERR_INVALID_INVOICE_CALCULATION');
+      } catch (calcErr: unknown) {
+        const errorMsg = calcErr instanceof Error ? calcErr.message : 'Invoice calculation error';
+        throw new AppError(errorMsg, 400, 'ERR_INVALID_INVOICE_CALCULATION');
       }
 
       if (calculated.grandTotal.lessThanOrEqualTo(0)) {
@@ -720,7 +755,15 @@ router.post('/:id/issue', async (req: Request, res: Response, next: NextFunction
     // Atomic transaction with row locking to prevent race conditions & duplicate sequence allocation
     const issuedInvoice = await prisma.$transaction(async (tx) => {
       // 1. Lock invoice row FOR UPDATE
-      const lockedRows: any[] = await tx.$queryRaw`
+      interface LockedIssueRow {
+        id: string;
+        status: string;
+        businessId: string;
+        grandTotal: string | number;
+        customerId: string;
+        placeOfSupply: string | null;
+      }
+      const lockedRows = await tx.$queryRaw<LockedIssueRow[]>`
         SELECT id, status, "businessId", "grandTotal", "customerId", "placeOfSupply"
         FROM "invoices"
         WHERE id = ${id}
@@ -856,7 +899,12 @@ router.post('/:id/cancel', async (req: Request, res: Response, next: NextFunctio
     const { id } = req.params;
 
     const cancelledInvoice = await prisma.$transaction(async (tx) => {
-      const lockedRows: any[] = await tx.$queryRaw`
+      interface LockedCancelRow {
+        id: string;
+        status: string;
+        invoiceNumber: string;
+      }
+      const lockedRows = await tx.$queryRaw<LockedCancelRow[]>`
         SELECT id, status, "invoiceNumber"
         FROM "invoices"
         WHERE id = ${id}

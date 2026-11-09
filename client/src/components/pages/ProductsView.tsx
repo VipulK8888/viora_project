@@ -44,8 +44,9 @@ export const ProductsView: React.FC = () => {
     try {
       const res = await fetchProducts({ search: searchQuery });
       setProducts(res.products);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load products');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to load products';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -113,8 +114,9 @@ export const ProductsView: React.FC = () => {
       setUnitPrice('');
       setTaxRate('18');
       loadData();
-    } catch (err: any) {
-      alert(`Error saving product: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error saving product';
+      alert(`Error saving product: ${msg}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -128,8 +130,9 @@ export const ProductsView: React.FC = () => {
       );
       setTimeout(() => setToastMessage(null), 3000);
       loadData();
-    } catch (err: any) {
-      alert(`Error updating product: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error updating product';
+      alert(`Error updating product: ${msg}`);
     }
   };
 
@@ -141,8 +144,9 @@ export const ProductsView: React.FC = () => {
       setToastMessage('Product removed/archived');
       setTimeout(() => setToastMessage(null), 3000);
       loadData();
-    } catch (err: any) {
-      alert(`Error removing product: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error removing product';
+      alert(`Error removing product: ${msg}`);
     }
   };
 
@@ -357,10 +361,11 @@ export const ProductsView: React.FC = () => {
 
             <form onSubmit={handleSaveProduct} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="prod-name-input" className="block text-xs font-semibold text-slate-700 mb-1">
                   Product / Service Name <span className="text-rose-500">*</span>
                 </label>
                 <input
+                  id="prod-name-input"
                   type="text"
                   required
                   value={name}
@@ -371,10 +376,11 @@ export const ProductsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="prod-desc-textarea" className="block text-xs font-semibold text-slate-700 mb-1">
                   Description
                 </label>
                 <textarea
+                  id="prod-desc-textarea"
                   rows={2}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -385,10 +391,11 @@ export const ProductsView: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label htmlFor="prod-unit-select" className="block text-xs font-semibold text-slate-700 mb-1">
                     Unit <span className="text-rose-500">*</span>
                   </label>
                   <select
+                    id="prod-unit-select"
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
                     className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
@@ -404,10 +411,11 @@ export const ProductsView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label htmlFor="prod-price-input" className="block text-xs font-semibold text-slate-700 mb-1">
                     Unit Price (₹) <span className="text-rose-500">*</span>
                   </label>
                   <input
+                    id="prod-price-input"
                     type="number"
                     required
                     min="0"
@@ -420,10 +428,11 @@ export const ProductsView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label htmlFor="prod-tax-select" className="block text-xs font-semibold text-slate-700 mb-1">
                     Tax Rate (%)
                   </label>
                   <select
+                    id="prod-tax-select"
                     value={taxRate}
                     onChange={(e) => setTaxRate(e.target.value)}
                     className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"

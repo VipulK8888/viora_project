@@ -97,8 +97,9 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
       await downloadInvoicePdf(invoice.id, invoice.invoiceNumber);
       setActionNotice('PDF downloaded successfully');
       setTimeout(() => setActionNotice(null), 3000);
-    } catch (err: any) {
-      alert(`Error downloading PDF: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error downloading PDF';
+      alert(`Error downloading PDF: ${msg}`);
     } finally {
       setIsDownloadingPdf(false);
     }
@@ -115,8 +116,9 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
       setActionNotice(`Invoice ${issued.invoiceNumber} has been officially issued!`);
       setTimeout(() => setActionNotice(null), 3000);
       onIssueSuccess?.();
-    } catch (err: any) {
-      alert(`Failed to issue invoice: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to issue invoice';
+      alert(`Failed to issue invoice: ${msg}`);
     } finally {
       setIsIssuing(false);
     }
@@ -134,8 +136,9 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
       }
       setActionNotice('WhatsApp reminder sent & logged');
       setTimeout(() => setActionNotice(null), 3500);
-    } catch (err: any) {
-      alert(`Failed to send WhatsApp reminder: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to send WhatsApp reminder';
+      alert(`Failed to send WhatsApp reminder: ${msg}`);
     } finally {
       setIsSendingReminder(false);
     }
@@ -146,14 +149,15 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     try {
       setIsSendingReminder(true);
       const res = await sendInvoiceEmailReminder(invoice.id);
-      if (res && (res as any).previewUrl) {
+      if (res && res.previewUrl) {
         setActionNotice(`Email dispatched! (Sandbox preview link recorded in Automated Reminders > Logs)`);
       } else {
         setActionNotice(`Email reminder sent to ${invoice.customerEmailSnapshot || 'client'}`);
       }
       setTimeout(() => setActionNotice(null), 4500);
-    } catch (err: any) {
-      alert(`Failed to send email reminder: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to send email reminder';
+      alert(`Failed to send email reminder: ${msg}`);
     } finally {
       setIsSendingReminder(false);
     }

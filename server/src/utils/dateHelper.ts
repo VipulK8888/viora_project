@@ -41,7 +41,7 @@ export function formatPeriodKeyIST(d: Date, groupBy: 'day' | 'month' = 'day'): s
 export function formatDateDisplay(dateStrOrObj?: string | Date | null): string {
   if (!dateStrOrObj) return '';
   const d = typeof dateStrOrObj === 'string' ? new Date(dateStrOrObj) : dateStrOrObj;
-  if (isNaN(d.getTime())) return String(dateStrOrObj);
+  if (Number.isNaN(d.getTime())) return String(dateStrOrObj);
   return d.toISOString().split('T')[0];
 }
 

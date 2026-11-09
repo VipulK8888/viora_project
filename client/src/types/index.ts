@@ -255,3 +255,50 @@ export interface ReminderLogItem {
   nextEligibleAt: string;
 }
 
+export interface SalesReportSummary {
+  totalSales: number;
+  totalCollected: number;
+  netOutstanding: number;
+  invoiceCount?: number;
+  paymentCount?: number;
+  totalTax?: number;
+  totalDiscount?: number;
+  totalIssuedInvoices?: number;
+  totalPayments?: number;
+  periodUnpaidReceivables?: number;
+  totalOutstandingReceivables?: number;
+  periodNetCashFlow?: number;
+}
+
+export interface SalesReportTimelineItem {
+  period: string;
+  sales: number;
+  collections: number;
+  invoiceCount: number;
+  paymentCount: number;
+}
+
+export interface SalesTimelineEntry {
+  period: string;
+  invoiceCount: number;
+  subtotal: number;
+  discountTotal: number;
+  taxTotal: number;
+  grandTotal: number;
+}
+
+export interface CollectionsTimelineEntry {
+  period: string;
+  paymentCount: number;
+  totalCollected: number;
+}
+
+export interface SalesReportData {
+  groupBy: 'day' | 'month';
+  summary: SalesReportSummary;
+  timeline?: SalesReportTimelineItem[];
+  salesTimeline?: SalesTimelineEntry[];
+  collectionsTimeline?: CollectionsTimelineEntry[];
+}
+
+

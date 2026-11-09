@@ -434,8 +434,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                         onClick={async () => {
                           try {
                             await downloadInvoicePdf(inv.id, inv.invoiceNumber);
-                          } catch (err: any) {
-                            alert(`Download error: ${err.message}`);
+                          } catch (err) {
+                            const msg = err instanceof Error ? err.message : 'Download error';
+                            alert(`Download error: ${msg}`);
                           }
                         }}
                         title="Download A4 PDF"

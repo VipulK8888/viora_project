@@ -22,10 +22,11 @@ export async function checkDatabaseConnection(): Promise<{ isConnected: boolean;
   try {
     await prisma.$queryRaw`SELECT 1`;
     return { isConnected: true, message: 'Database connection active' };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'PostgreSQL not yet provisioned';
     return {
       isConnected: false,
-      message: `Database standby (Phase 2): ${err.message || 'PostgreSQL not yet provisioned'}`,
+      message: `Database standby (Phase 2): ${errorMsg}`,
     };
   }
 }

@@ -9,7 +9,16 @@ export interface TierCadence {
   minAmount: number;
 }
 
-export function getTierAndCadence(amount: number, business: any): TierCadence {
+export function getTierAndCadence(
+  amount: number,
+  business: {
+    highTierMinAmount?: unknown;
+    midTierMinAmount?: unknown;
+    highTierDaysGap?: number | null;
+    midTierDaysGap?: number | null;
+    lowTierDaysGap?: number | null;
+  }
+): TierCadence {
   const highMin = Number(business.highTierMinAmount) || 50000;
   const midMin = Number(business.midTierMinAmount) || 10000;
 
@@ -233,9 +242,19 @@ export function generateEmailHtml(params: {
 }
 
 // Mailer transporter with fallback
-let cachedEtherealAccount: any = null;
+let cachedEtherealAccount: {
+  user: string;
+  pass: string;
+  smtp: { host: string; port: number; secure: boolean };
+} | null = null;
 
-export async function getTransporter(business?: any) {
+export async function getTransporter(business?: {
+  smtpHost?: string | null;
+  smtpPort?: number | string | null;
+  smtpUser?: string | null;
+  smtpPass?: string | null;
+  smtpSecure?: boolean | null;
+}) {
   const host = business?.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = Number(business?.smtpPort || process.env.SMTP_PORT) || 587;
   const user = business?.smtpUser || process.env.SMTP_USER;
@@ -607,9 +626,10 @@ export class ReminderService {
           previewUrl = testUrl;
         }
       }
-    } catch (err: any) {
-      console.warn(`[ReminderService] SMTP delivery notice: ${err.message}.`);
-      throw new Error(`Email delivery failed: ${err.message}. Please configure your SMTP settings in Business Settings.`);
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.warn(`[ReminderService] SMTP delivery notice: ${errorMsg}.`);
+      throw new Error(`Email delivery failed: ${errorMsg}. Please configure your SMTP settings in Business Settings.`);
     }
 
     const nextEligibleAt = new Date(now.getTime() + tierInfo.daysGap * 86400000);
@@ -662,17 +682,20 @@ export class ReminderService {
    * Dispatches both Email and WhatsApp reminder for a specific invoice.
    */
   static async sendBothReminders(invoiceId: string) {
-    const results: any = {};
+    const results: {
+      whatsapp?: { success: boolean; error?: string; [key: string]: unknown };
+      email?: { success: boolean; error?: string; [key: string]: unknown };
+    } = {};
     try {
       results.whatsapp = await this.sendWhatsAppReminder(invoiceId);
-    } catch (err: any) {
-      results.whatsapp = { success: false, error: err.message };
+    } catch (err: unknown) {
+      results.whatsapp = { success: false, error: err instanceof Error ? err.message : String(err) };
     }
 
     try {
       results.email = await this.sendEmailReminder(invoiceId);
-    } catch (err: any) {
-      results.email = { success: false, error: err.message };
+    } catch (err: unknown) {
+      results.email = { success: false, error: err instanceof Error ? err.message : String(err) };
     }
 
     return {
@@ -688,10 +711,20 @@ export class ReminderService {
     const queueData = await this.getReminderQueue();
     const dueItems = queueData.queue.filter((item) => item.isDue);
 
-    const sweepResults: any[] = [];
+    interface SweepItemResult {
+      invoiceId: string;
+      invoiceNumber: string;
+      customerName: string;
+      balanceRemaining: number;
+      tier: string;
+      daysGapApplied: number;
+      email?: { success: boolean; logId?: string; error?: string };
+      whatsapp?: { success: boolean; logId?: string; url?: string; error?: string };
+    }
+    const sweepResults: SweepItemResult[] = [];
 
     for (const item of dueItems) {
-      const itemResult: any = {
+      const itemResult: SweepItemResult = {
         invoiceId: item.invoiceId,
         invoiceNumber: item.invoiceNumber,
         customerName: item.customerName,
@@ -705,8 +738,8 @@ export class ReminderService {
         try {
           const emailRes = await this.sendEmailReminder(item.invoiceId);
           itemResult.email = { success: true, logId: emailRes.logId };
-        } catch (err: any) {
-          itemResult.email = { success: false, error: err.message };
+        } catch (err: unknown) {
+          itemResult.email = { success: false, error: err instanceof Error ? err.message : String(err) };
         }
       }
 
@@ -715,8 +748,8 @@ export class ReminderService {
         try {
           const waRes = await this.sendWhatsAppReminder(item.invoiceId);
           itemResult.whatsapp = { success: true, logId: waRes.logId, url: waRes.whatsAppUrl };
-        } catch (err: any) {
-          itemResult.whatsapp = { success: false, error: err.message };
+        } catch (err: unknown) {
+          itemResult.whatsapp = { success: false, error: err instanceof Error ? err.message : String(err) };
         }
       }
 
@@ -898,8 +931,9 @@ export class ReminderService {
         if (!mailInfo.isLiveSmtp) {
           previewUrl = nodemailer.getTestMessageUrl(info) || null;
         }
-      } catch (err: any) {
-        console.warn('[ReminderService] Test email notice:', err.message);
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        console.warn('[ReminderService] Test email notice:', errorMsg);
       }
     }
 

@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { prisma } from '../../config/prisma';
+import { prisma, Prisma } from '../../config/prisma';
 import { sendSuccess } from '../../utils/response';
 import { validateRequest } from '../../middlewares/validate';
 import { getOrCreateDefaultBusiness } from '../../utils/businessHelper';
@@ -14,7 +14,7 @@ const isValidCalendarDate = (val: string) => {
   const [y, m, d] = val.split('-').map(Number);
   if (m < 1 || m > 12 || d < 1 || d > 31) return false;
   const parsed = new Date(`${val}T00:00:00Z`);
-  return !isNaN(parsed.getTime());
+  return !Number.isNaN(parsed.getTime());
 };
 
 const salesReportQuerySchema = z.object({
@@ -35,10 +35,14 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const business = await getOrCreateDefaultBusiness();
-      const { startDate, endDate, groupBy } = req.query as any;
+      const { startDate, endDate, groupBy } = req.query as unknown as {
+        startDate?: string;
+        endDate?: string;
+        groupBy?: 'day' | 'month';
+      };
 
       // 1. Invoices filter (ISSUED invoices only)
-      const invoiceWhere: any = {
+      const invoiceWhere: Prisma.InvoiceWhereInput = {
         businessId: business.id,
         status: 'ISSUED',
       };
@@ -66,7 +70,7 @@ router.get(
       });
 
       // 2. Payments filter (Collections by payment date in IST)
-      const paymentWhere: any = {
+      const paymentWhere: Prisma.PaymentWhereInput = {
         invoice: {
           businessId: business.id,
           status: 'ISSUED',

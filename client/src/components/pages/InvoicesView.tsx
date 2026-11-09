@@ -94,8 +94,9 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({
       setInvoices(res.invoices);
       setTotalCount(res.totalCount);
       setTotalPages(res.totalPages);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load invoices');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to load invoices';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -116,8 +117,9 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({
       setTimeout(() => setToastMessage(null), 3000);
       loadInvoices();
       onInvoiceDataChanged?.();
-    } catch (err: any) {
-      alert(`Delete error: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Delete error';
+      alert(`Delete error: ${msg}`);
     }
   };
 
@@ -132,8 +134,9 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({
       setTimeout(() => setToastMessage(null), 3000);
       loadInvoices();
       onInvoiceDataChanged?.();
-    } catch (err: any) {
-      alert(`Cancellation error: ${err.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Cancellation error';
+      alert(`Cancellation error: ${msg}`);
     }
   };
 
