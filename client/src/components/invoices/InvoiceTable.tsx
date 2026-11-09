@@ -51,9 +51,6 @@ export interface InvoiceTableProps {
   onEditDraft?: (invoice: Invoice) => void;
   onDeleteDraft?: (invoice: Invoice) => void;
   onCancelInvoice?: (invoice: Invoice) => void;
-  // Legacy compatibility props (ignored or removed)
-  isSimulatedEmpty?: boolean;
-  onSimulateEmptyToggle?: (val: boolean) => void;
 }
 
 export const InvoiceTable: React.FC<InvoiceTableProps> = ({
@@ -335,7 +332,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       )}
 
       {/* Table content or empty state */}
-      {isLoading ? (
+      {pagedInvoices.length === 0 && isLoading ? (
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>

@@ -17,8 +17,6 @@ interface InvoicesViewProps {
   onRecordPayment: (inv: Invoice) => void;
   onEditDraft?: (inv: Invoice) => void;
   onInvoiceDataChanged?: () => void;
-  isSimulatedEmpty?: boolean;
-  onSimulateEmptyToggle?: (val: boolean) => void;
 }
 
 export const InvoicesView: React.FC<InvoicesViewProps> = ({

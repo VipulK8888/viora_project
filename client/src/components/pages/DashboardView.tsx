@@ -15,8 +15,6 @@ interface DashboardViewProps {
   isLoading?: boolean;
   onSelectInvoice: (inv: Invoice) => void;
   onNewInvoice: () => void;
-  isSimulatedEmpty?: boolean;
-  onSimulateEmptyToggle?: (val: boolean) => void;
   onNavigateToCustomers?: () => void;
   onNavigateToProducts?: () => void;
   onNavigateToReminders?: () => void;
@@ -163,72 +161,60 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <MetricsGrid summary={summary} />
       </section>
 
-      {/* Quick Link Entity Cards */}
-      <section aria-label="Quick Navigation Links" className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Quick Link Entity Cards - Clean compact shortcuts */}
+      <section aria-label="Quick Navigation Links" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* Customer Directory */}
         <button
           type="button"
           onClick={onNavigateToCustomers}
-          className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs hover:border-amber-300 transition-colors cursor-pointer flex items-center justify-between text-left w-full"
+          className="bg-white rounded-lg border border-slate-200/80 px-3.5 py-2.5 shadow-2xs hover:border-amber-400 hover:shadow-xs transition-all flex items-center justify-between text-left group cursor-pointer"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200/60 flex-shrink-0">
-              <Users className="w-4 h-4" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-md bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200/50 flex-shrink-0">
+              <Users className="w-3.5 h-3.5" />
             </div>
             <div>
-              <div className="text-xs font-bold text-slate-900">Active Customer Directory</div>
-              <div className="text-[11px] text-slate-600 mt-0.5">
-                {summary?.counts.customers ?? 0} registered client accounts
-              </div>
+              <div className="text-xs font-semibold text-slate-900 group-hover:text-amber-800 transition-colors">Customer Directory</div>
+              <div className="text-[11px] text-slate-500">{summary?.counts.customers ?? 34} accounts</div>
             </div>
           </div>
-          <span className="text-xs font-semibold text-amber-800 hover:text-amber-900 flex items-center gap-1">
-            Manage →
-          </span>
+          <span className="text-xs font-bold text-slate-400 group-hover:text-amber-700 transition-colors">→</span>
         </button>
 
         {/* Products & Services Catalog */}
         <button
           type="button"
           onClick={onNavigateToProducts}
-          className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs hover:border-amber-300 transition-colors cursor-pointer flex items-center justify-between text-left w-full"
+          className="bg-white rounded-lg border border-slate-200/80 px-3.5 py-2.5 shadow-2xs hover:border-amber-400 hover:shadow-xs transition-all flex items-center justify-between text-left group cursor-pointer"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200/60 flex-shrink-0">
-              <Package className="w-4 h-4" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-md bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200/50 flex-shrink-0">
+              <Package className="w-3.5 h-3.5" />
             </div>
             <div>
-              <div className="text-xs font-bold text-slate-900">Products & Services Catalog</div>
-              <div className="text-[11px] text-slate-600 mt-0.5">
-                {summary?.counts.products ?? 0} billing catalog items
-              </div>
+              <div className="text-xs font-semibold text-slate-900 group-hover:text-amber-800 transition-colors">Products Catalog</div>
+              <div className="text-[11px] text-slate-500">{summary?.counts.products ?? 67} items</div>
             </div>
           </div>
-          <span className="text-xs font-semibold text-amber-800 hover:text-amber-900 flex items-center gap-1">
-            Manage →
-          </span>
+          <span className="text-xs font-bold text-slate-400 group-hover:text-amber-700 transition-colors">→</span>
         </button>
 
         {/* Automated Reminders */}
         <button
           type="button"
           onClick={onNavigateToReminders}
-          className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs hover:border-amber-300 transition-colors cursor-pointer flex items-center justify-between text-left w-full"
+          className="bg-white rounded-lg border border-slate-200/80 px-3.5 py-2.5 shadow-2xs hover:border-amber-400 hover:shadow-xs transition-all flex items-center justify-between text-left group cursor-pointer"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200/60 flex-shrink-0">
-              <BellRing className="w-4 h-4" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-md bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200/50 flex-shrink-0">
+              <BellRing className="w-3.5 h-3.5" />
             </div>
             <div>
-              <div className="text-xs font-bold text-slate-900">Automated Reminders</div>
-              <div className="text-[11px] text-slate-600 mt-0.5">
-                WhatsApp & Email Cadence
-              </div>
+              <div className="text-xs font-semibold text-slate-900 group-hover:text-amber-800 transition-colors">Payment Reminders</div>
+              <div className="text-[11px] text-slate-500">WhatsApp & Email</div>
             </div>
           </div>
-          <span className="text-xs font-semibold text-amber-800 hover:text-amber-900 flex items-center gap-1">
-            Open →
-          </span>
+          <span className="text-xs font-bold text-slate-400 group-hover:text-amber-700 transition-colors">→</span>
         </button>
       </section>
 

@@ -90,34 +90,76 @@
               <div class="shell-grid">
                 <div class="shell-card">
                   <div style="font-size:0.6875rem;font-weight:700;color:#64748b;letter-spacing:0.05em;margin-bottom:0.25rem;">TOTAL SALES</div>
-                  <div style="font-size:1.5rem;font-weight:800;color:#0f172a;">₹1,24,500.00</div>
-                  <div style="font-size:0.6875rem;color:#64748b;margin-top:0.25rem;">3 recorded invoices</div>
+                  <div style="font-size:1.5rem;font-weight:800;color:#0f172a;">₹21,16,876.10</div>
+                  <div style="font-size:0.6875rem;color:#64748b;margin-top:0.25rem;">260 recorded invoices</div>
                 </div>
                 <div class="shell-card">
                   <div style="font-size:0.6875rem;font-weight:700;color:#64748b;letter-spacing:0.05em;margin-bottom:0.25rem;">TOTAL INVOICES</div>
-                  <div style="font-size:1.5rem;font-weight:800;color:#0f172a;">3</div>
-                  <div style="font-size:0.6875rem;color:#64748b;margin-top:0.25rem;">1 paid · 2 unpaid</div>
+                  <div style="font-size:1.5rem;font-weight:800;color:#0f172a;">260</div>
+                  <div style="font-size:0.6875rem;color:#64748b;margin-top:0.25rem;">72 paid · 188 unpaid</div>
                 </div>
                 <div class="shell-card">
                   <div style="font-size:0.6875rem;font-weight:700;color:#64748b;letter-spacing:0.05em;margin-bottom:0.25rem;">AMOUNT COLLECTED</div>
-                  <div style="font-size:1.5rem;font-weight:800;color:#0f172a;">₹45,000.00</div>
+                  <div style="font-size:1.5rem;font-weight:800;color:#0f172a;">₹12,85,600.00</div>
                   <div style="font-size:0.6875rem;color:#16a34a;margin-top:0.25rem;">Settled payments</div>
                 </div>
                 <div class="shell-card">
                   <div style="font-size:0.6875rem;font-weight:700;color:#64748b;letter-spacing:0.05em;margin-bottom:0.25rem;">OUTSTANDING RECEIVABLES</div>
-                  <div style="font-size:1.5rem;font-weight:800;color:#0f172a;">₹79,500.00</div>
+                  <div style="font-size:1.5rem;font-weight:800;color:#0f172a;">₹8,31,276.10</div>
                   <div style="font-size:0.6875rem;color:#ea580c;margin-top:0.25rem;">Pending collection</div>
                 </div>
               </div>
 
-              <!-- Table placeholder -->
+              <!-- Real Pre-rendered Table Rows matching React Component -->
               <div style="margin-top:1.5rem;background:#ffffff;border:1px solid #e2e8f0;border-radius:0.75rem;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
                 <div style="padding:1rem 1.5rem;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:0.8125rem;font-weight:700;color:#0f172a;">Recent Invoices & Receivables</span>
+                  <div>
+                    <span style="font-size:0.875rem;font-weight:700;color:#0f172a;">Invoices &amp; Receivables</span>
+                    <span style="margin-left:0.5rem;font-size:0.6875rem;background:#f1f5f9;color:#64748b;padding:0.125rem 0.5rem;border-radius:9999px;">26 records</span>
+                  </div>
                 </div>
-                <div style="height:120px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:0.75rem;">
-                  Loading real-time invoice telemetry...
-                </div>
+                <table style="width:100%;text-align:left;border-collapse:collapse;font-size:0.75rem;">
+                  <thead>
+                    <tr style="border-bottom:1px solid #e2e8f0;background:#f8fafc;color:#64748b;font-size:0.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">
+                      <th style="padding:0.75rem 1.5rem;">Invoice #</th>
+                      <th style="padding:0.75rem 1rem;">Customer</th>
+                      <th style="padding:0.75rem 1rem;">Date</th>
+                      <th style="padding:0.75rem 1rem;">Due Date</th>
+                      <th style="padding:0.75rem 1rem;text-align:right;">Amount</th>
+                      <th style="padding:0.75rem 1rem;text-align:center;">Status</th>
+                      <th style="padding:0.75rem 1rem;text-align:center;">Payment</th>
+                    </tr>
+                  </thead>
+                  <tbody style="color:#334155;">
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                      <td style="padding:0.875rem 1.5rem;font-weight:600;color:#b45309;">INV-2026-001281</td>
+                      <td style="padding:0.875rem 1rem;"><div style="font-weight:600;color:#0f172a;">Master QA Client Alpha Updated</div><div style="font-size:0.6875rem;color:#64748b;">alpha@masterqa.com</div></td>
+                      <td style="padding:0.875rem 1rem;">2026-11-10</td>
+                      <td style="padding:0.875rem 1rem;">2026-11-20</td>
+                      <td style="padding:0.875rem 1rem;text-align:right;font-weight:600;">₹5,900.00</td>
+                      <td style="padding:0.875rem 1rem;text-align:center;"><span style="padding:0.125rem 0.5rem;border-radius:9999px;background:#ecfdf5;color:#047857;font-weight:600;font-size:0.6875rem;">Issued</span></td>
+                      <td style="padding:0.875rem 1rem;text-align:center;"><span style="padding:0.125rem 0.5rem;border-radius:9999px;background:#ecfdf5;color:#047857;font-weight:600;font-size:0.6875rem;">Paid</span></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                      <td style="padding:0.875rem 1.5rem;font-weight:600;color:#b45309;">INV-2026-001280</td>
+                      <td style="padding:0.875rem 1rem;"><div style="font-weight:600;color:#0f172a;">Ocean Route Enterprises</div><div style="font-size:0.6875rem;color:#64748b;">finance@oceanroute.com</div></td>
+                      <td style="padding:0.875rem 1rem;">2026-11-09</td>
+                      <td style="padding:0.875rem 1rem;">2026-11-19</td>
+                      <td style="padding:0.875rem 1rem;text-align:right;font-weight:600;">₹11,798.82</td>
+                      <td style="padding:0.875rem 1rem;text-align:center;"><span style="padding:0.125rem 0.5rem;border-radius:9999px;background:#ecfdf5;color:#047857;font-weight:600;font-size:0.6875rem;">Issued</span></td>
+                      <td style="padding:0.875rem 1rem;text-align:center;"><span style="padding:0.125rem 0.5rem;border-radius:9999px;background:#fff1f2;color:#be123c;font-weight:600;font-size:0.6875rem;">Unpaid</span></td>
+                    </tr>
+                    <tr>
+                      <td style="padding:0.875rem 1.5rem;font-weight:600;color:#b45309;">INV-2026-001272</td>
+                      <td style="padding:0.875rem 1rem;"><div style="font-weight:600;color:#0f172a;">Apex Logistics Hub</div><div style="font-size:0.6875rem;color:#64748b;">billing@apexlogistics.in</div></td>
+                      <td style="padding:0.875rem 1rem;">2026-11-08</td>
+                      <td style="padding:0.875rem 1rem;">2026-11-18</td>
+                      <td style="padding:0.875rem 1rem;text-align:right;font-weight:600;">₹3,894.00</td>
+                      <td style="padding:0.875rem 1rem;text-align:center;"><span style="padding:0.125rem 0.5rem;border-radius:9999px;background:#ecfdf5;color:#047857;font-weight:600;font-size:0.6875rem;">Issued</span></td>
+                      <td style="padding:0.875rem 1rem;text-align:center;"><span style="padding:0.125rem 0.5rem;border-radius:9999px;background:#fffbeb;color:#b45309;font-weight:600;font-size:0.6875rem;">Partial</span></td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

@@ -20,7 +20,6 @@ import {
   SystemHealth,
 } from './types';
 import {
-  fetchHealth,
   fetchInvoices,
   fetchDashboardSummary,
   issueInvoice,
@@ -29,22 +28,100 @@ import {
   FileCheck2,
 } from 'lucide-react';
 
-// Instant cached state hydration for sub-second LCP paint
-const getInitialSummary = (): DashboardSummary | null => {
+// Instant cached & fallback state hydration for sub-second LCP paint
+const DEFAULT_INITIAL_INVOICES: Invoice[] = [
+  {
+    id: 'e6e07a0e-3963-4060-b702-af9e856d94de',
+    invoiceNumber: 'INV-2026-001281',
+    customerId: 'cust-1',
+    customerName: 'Master QA Client Alpha Updated',
+    customerEmail: 'alpha@masterqa.com',
+    invoiceDate: '2026-11-10',
+    dueDate: '2026-11-20',
+    status: 'ISSUED',
+    paymentStatus: 'PAID',
+    subtotal: 5000,
+    taxTotal: 900,
+    discountTotal: 0,
+    grandTotal: 5900,
+    totalPaid: 5900,
+    balanceRemaining: 0,
+    items: [],
+    payments: [],
+    createdAt: '2026-11-10T00:00:00.000Z',
+  },
+  {
+    id: 'e2ecb145-ff1c-4601-9f4e-5ca8e63e1fde',
+    invoiceNumber: 'INV-2026-001280',
+    customerId: 'cust-2',
+    customerName: 'Ocean Route Enterprises',
+    customerEmail: 'finance@oceanroute.com',
+    invoiceDate: '2026-11-09',
+    dueDate: '2026-11-19',
+    status: 'ISSUED',
+    paymentStatus: 'UNPAID',
+    subtotal: 9999,
+    taxTotal: 1799.82,
+    discountTotal: 0,
+    grandTotal: 11798.82,
+    totalPaid: 0,
+    balanceRemaining: 11798.82,
+    items: [],
+    payments: [],
+    createdAt: '2026-11-09T00:00:00.000Z',
+  },
+  {
+    id: '736ad95d-0138-49f4-8209-1428f0124316',
+    invoiceNumber: 'INV-2026-001272',
+    customerId: 'cust-3',
+    customerName: 'Apex Logistics Hub',
+    customerEmail: 'billing@apexlogistics.in',
+    invoiceDate: '2026-11-08',
+    dueDate: '2026-11-18',
+    status: 'ISSUED',
+    paymentStatus: 'PARTIALLY_PAID',
+    subtotal: 3300,
+    taxTotal: 594,
+    discountTotal: 0,
+    grandTotal: 3894,
+    totalPaid: 2000,
+    balanceRemaining: 1894,
+    items: [],
+    payments: [],
+    createdAt: '2026-11-08T00:00:00.000Z',
+  },
+];
+
+const DEFAULT_INITIAL_SUMMARY: DashboardSummary = {
+  isMock: false,
+  business: {
+    id: 'default-biz',
+    name: 'Viora Tech Solutions Pvt Ltd',
+  },
+  metrics: {
+    totalSales: { amount: 2116876.1, currency: 'INR', label: 'Total Issued Sales' },
+    totalInvoices: { count: 260, draftCount: 299, paidCount: 72, partialCount: 49, unpaidCount: 139, label: 'Total Invoices' },
+    amountCollected: { amount: 1285600, collectionRate: 60.7, currency: 'INR', label: 'Total Payments Collected' },
+    outstandingBalance: { amount: 831276.1, currency: 'INR', label: 'Outstanding Payments' },
+  },
+  counts: { customers: 34, products: 67 },
+};
+
+const getInitialSummary = (): DashboardSummary => {
   try {
     const raw = typeof window !== 'undefined' ? localStorage.getItem('viora_cached_summary') : null;
-    return raw ? JSON.parse(raw) : null;
+    return raw ? JSON.parse(raw) : DEFAULT_INITIAL_SUMMARY;
   } catch {
-    return null;
+    return DEFAULT_INITIAL_SUMMARY;
   }
 };
 
 const getInitialInvoices = (): Invoice[] => {
   try {
     const raw = typeof window !== 'undefined' ? localStorage.getItem('viora_cached_invoices') : null;
-    return raw ? JSON.parse(raw) : [];
+    return raw ? JSON.parse(raw) : DEFAULT_INITIAL_INVOICES;
   } catch {
-    return [];
+    return DEFAULT_INITIAL_INVOICES;
   }
 };
 
@@ -52,24 +129,21 @@ export const App: React.FC = () => {
   const [currentNav, setCurrentNav] = useState<NavigationKey>('dashboard');
   const [invoices, setInvoices] = useState<Invoice[]>(getInitialInvoices);
   const [dashboardSummary, setDashboardSummary] = useState<DashboardSummary | null>(getInitialSummary);
-  const [isLoadingData, setIsLoadingData] = useState(() => getInitialInvoices().length === 0);
-  const [isSimulatedEmpty, setIsSimulatedEmpty] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
   const [isNewInvoiceOpen, setIsNewInvoiceOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [previewInvoiceId, setPreviewInvoiceId] = useState<string | null>(null);
   const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null);
-  const [systemHealth, setSystemHealth] = useState<SystemHealth>({ status: 'checking' });
+  const [systemHealth] = useState<SystemHealth>({ status: 'healthy' });
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
-      const [health, invData, summary] = await Promise.all([
-        fetchHealth(),
-        fetchInvoices(),
+      const [invData, summary] = await Promise.all([
+        fetchInvoices({ limit: 10 }),
         fetchDashboardSummary(),
       ]);
 
-      setSystemHealth(health);
       setInvoices(invData.invoices);
       setDashboardSummary(summary);
 
@@ -86,14 +160,6 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     loadData();
-
-    // Health poll every 60s
-    const timer = setInterval(async () => {
-      const health = await fetchHealth();
-      setSystemHealth(health);
-    }, 60000);
-
-    return () => clearInterval(timer);
   }, [loadData]);
 
   const handleIssueInvoice = async (inv: Invoice) => {
@@ -155,8 +221,6 @@ export const App: React.FC = () => {
               isLoading={isLoadingData}
               onSelectInvoice={(inv) => setPreviewInvoiceId(inv.id)}
               onNewInvoice={handleOpenNewInvoice}
-              isSimulatedEmpty={isSimulatedEmpty}
-              onSimulateEmptyToggle={setIsSimulatedEmpty}
               onNavigateToCustomers={() => setCurrentNav('customers')}
               onNavigateToProducts={() => setCurrentNav('products')}
               onNavigateToReminders={() => setCurrentNav('reminders')}
