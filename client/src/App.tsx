@@ -29,10 +29,30 @@ import {
   FileCheck2,
 } from 'lucide-react';
 
+// Instant cached state hydration for sub-second LCP paint
+const getInitialSummary = (): DashboardSummary | null => {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem('viora_cached_summary') : null;
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const getInitialInvoices = (): Invoice[] => {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem('viora_cached_invoices') : null;
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
 export const App: React.FC = () => {
   const [currentNav, setCurrentNav] = useState<NavigationKey>('dashboard');
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [dashboardSummary, setDashboardSummary] = useState<DashboardSummary | null>(null);
+  const [invoices, setInvoices] = useState<Invoice[]>(getInitialInvoices);
+  const [dashboardSummary, setDashboardSummary] = useState<DashboardSummary | null>(getInitialSummary);
+  const [isLoadingData, setIsLoadingData] = useState(() => getInitialInvoices().length === 0);
   const [isSimulatedEmpty, setIsSimulatedEmpty] = useState(false);
   const [isNewInvoiceOpen, setIsNewInvoiceOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
@@ -42,25 +62,36 @@ export const App: React.FC = () => {
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
-    const [health, invData, summary] = await Promise.all([
-      fetchHealth(),
-      fetchInvoices(),
-      fetchDashboardSummary(),
-    ]);
+    try {
+      const [health, invData, summary] = await Promise.all([
+        fetchHealth(),
+        fetchInvoices(),
+        fetchDashboardSummary(),
+      ]);
 
-    setSystemHealth(health);
-    setInvoices(invData.invoices);
-    setDashboardSummary(summary);
+      setSystemHealth(health);
+      setInvoices(invData.invoices);
+      setDashboardSummary(summary);
+
+      try {
+        if (summary) localStorage.setItem('viora_cached_summary', JSON.stringify(summary));
+        if (invData?.invoices?.length) localStorage.setItem('viora_cached_invoices', JSON.stringify(invData.invoices.slice(0, 10)));
+      } catch {
+        // Ignore localStorage exceptions in private browsing
+      }
+    } finally {
+      setIsLoadingData(false);
+    }
   }, []);
 
   useEffect(() => {
     loadData();
 
-    // Health poll every 20s
+    // Health poll every 60s
     const timer = setInterval(async () => {
       const health = await fetchHealth();
       setSystemHealth(health);
-    }, 20000);
+    }, 60000);
 
     return () => clearInterval(timer);
   }, [loadData]);
@@ -121,6 +152,7 @@ export const App: React.FC = () => {
             <DashboardView
               summary={dashboardSummary}
               invoices={invoices}
+              isLoading={isLoadingData}
               onSelectInvoice={(inv) => setPreviewInvoiceId(inv.id)}
               onNewInvoice={handleOpenNewInvoice}
               isSimulatedEmpty={isSimulatedEmpty}

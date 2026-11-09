@@ -12,6 +12,7 @@ import {
 interface DashboardViewProps {
   summary?: DashboardSummary | null;
   invoices: Invoice[];
+  isLoading?: boolean;
   onSelectInvoice: (inv: Invoice) => void;
   onNewInvoice: () => void;
   isSimulatedEmpty?: boolean;
@@ -25,6 +26,7 @@ interface DashboardViewProps {
 export const DashboardView: React.FC<DashboardViewProps> = ({
   summary,
   invoices,
+  isLoading,
   onSelectInvoice,
   onNewInvoice,
   onNavigateToCustomers,
@@ -65,7 +67,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
   };
 
-  const hasNoInvoices = summary !== null && invoices.length === 0;
+  const hasNoInvoices = !isLoading && summary !== null && invoices.length === 0;
 
   return (
     <div className="space-y-6">
@@ -234,6 +236,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <section aria-label="Recent Invoices">
         <InvoiceTable
           invoices={invoices}
+          isLoading={isLoading}
           onSelectInvoice={onSelectInvoice}
           onNewInvoice={onNewInvoice}
         />

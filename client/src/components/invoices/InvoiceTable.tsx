@@ -335,7 +335,38 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       )}
 
       {/* Table content or empty state */}
-      {!error && pagedInvoices.length === 0 ? (
+      {isLoading ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200/80 bg-slate-50/60 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                <th className="py-3 px-4 sm:px-6">Invoice #</th>
+                <th className="py-3 px-4">Customer</th>
+                <th className="py-3 px-4 hidden sm:table-cell">Date</th>
+                <th className="py-3 px-4 hidden md:table-cell">Due Date</th>
+                <th className="py-3 px-4 text-right">Amount</th>
+                <th className="py-3 px-4 text-center">Status</th>
+                <th className="py-3 px-4 text-center">Payment</th>
+                <th className="py-3 px-4 sm:px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+              {[1, 2, 3].map((n) => (
+                <tr key={n} className="animate-pulse">
+                  <td className="py-3.5 px-4 sm:px-6"><div className="h-4 w-20 bg-slate-200 rounded"></div></td>
+                  <td className="py-3.5 px-4"><div className="h-4 w-32 bg-slate-200 rounded"></div></td>
+                  <td className="py-3.5 px-4 hidden sm:table-cell"><div className="h-4 w-20 bg-slate-200 rounded"></div></td>
+                  <td className="py-3.5 px-4 hidden md:table-cell"><div className="h-4 w-20 bg-slate-200 rounded"></div></td>
+                  <td className="py-3.5 px-4 text-right"><div className="h-4 w-16 bg-slate-200 rounded ml-auto"></div></td>
+                  <td className="py-3.5 px-4 text-center"><div className="h-5 w-16 bg-slate-200 rounded mx-auto"></div></td>
+                  <td className="py-3.5 px-4 text-center"><div className="h-5 w-16 bg-slate-200 rounded mx-auto"></div></td>
+                  <td className="py-3.5 px-4 sm:px-6 text-right"><div className="h-6 w-16 bg-slate-200 rounded ml-auto"></div></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : !error && pagedInvoices.length === 0 ? (
         <EmptyState
           onNewInvoice={onNewInvoice}
           onResetFilters={() => {
